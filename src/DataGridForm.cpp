@@ -165,7 +165,7 @@ void __fastcall TFormPatch::SGDblClick(TObject *Sender)
     int row = sg->Row;
 
     // range check - we only set "flags" for column 1 rows > 0
-    if (col != 1 || row < 1 || row > D50_PATCH_SECTION_SIZE)
+    if (col != rRand || row < 1 || row > D50_PATCH_SECTION_SIZE)
         return;
 
     if (sg->Cells[rRand][row].LowerCase() == "on")
@@ -1266,10 +1266,10 @@ void __fastcall TFormPatch::MenuPresetsItemClick(TObject *Sender)
         {
             if (p == NULL)
                 for (int ii = 0; ii < D50_PATCH_SECTION_SIZE; ii++)
-                    sg->Cells[tabIndex][ii+1] = "";
+                    sg->Cells[rRand][ii+1] = "";
             else
                 for (int ii = 0; ii < D50_PATCH_SECTION_SIZE; ii++)
-                    sg->Cells[tabIndex][ii+1] = p[ii] ? "On" : "";
+                    sg->Cells[rRand][ii+1] = p[ii] ? "On" : "";
         }
     }
 }
