@@ -2,8 +2,8 @@ object FormPatch: TFormPatch
   Left = 0
   Top = 0
   Caption = 'Roland D-50 Temporary Area'
-  ClientHeight = 366
-  ClientWidth = 789
+  ClientHeight = 339
+  ClientWidth = 739
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -59,20 +59,22 @@ object FormPatch: TFormPatch
     Tag = 6
     Left = 0
     Top = 0
-    Width = 789
-    Height = 366
+    Width = 739
+    Height = 339
     ActivePage = UpperPartial1
     Align = alClient
     TabOrder = 0
-    ExplicitHeight = 344
     object UpperPartial1: TTabSheet
       Caption = 'Upper Partial 1'
-      ExplicitHeight = 316
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object UpperPartial1SG: TStringGrid
         Left = 0
         Top = 0
-        Width = 781
-        Height = 338
+        Width = 731
+        Height = 287
         Align = alClient
         ColCount = 4
         DefaultColWidth = 175
@@ -81,7 +83,6 @@ object FormPatch: TFormPatch
         ScrollBars = ssVertical
         TabOrder = 0
         OnDblClick = SGDblClick
-        ExplicitHeight = 316
         ColWidths = (
           175
           175
@@ -154,15 +155,45 @@ object FormPatch: TFormPatch
           24
           24)
       end
+      object Panel1: TPanel
+        Left = 0
+        Top = 287
+        Width = 731
+        Height = 24
+        Align = alBottom
+        TabOrder = 1
+        object LabelRand: TLabel
+          Left = 24
+          Top = 6
+          Width = 93
+          Height = 13
+          Caption = 'Randomization: Off'
+        end
+        object ButtonRandInterval: TButton
+          Left = 8
+          Top = 8
+          Width = 10
+          Height = 10
+          Hint = 'Click to change randomization interval'
+          ParentShowHint = False
+          ShowHint = True
+          TabOrder = 0
+          OnClick = ButtonRandIntervalClick
+        end
+      end
     end
     object UpperPartial2: TTabSheet
       Caption = 'Upper Partial 2'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object UpperPartial2SG: TStringGrid
         Left = 0
         Top = 0
-        Width = 781
-        Height = 338
+        Width = 731
+        Height = 331
         Align = alClient
         ColCount = 4
         DefaultColWidth = 175
@@ -247,11 +278,15 @@ object FormPatch: TFormPatch
     object UpperCommon: TTabSheet
       Caption = 'Upper Common'
       ImageIndex = 2
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object UpperCommonSG: TStringGrid
         Left = 0
         Top = 0
-        Width = 781
-        Height = 338
+        Width = 731
+        Height = 331
         Align = alClient
         ColCount = 4
         DefaultColWidth = 175
@@ -336,11 +371,15 @@ object FormPatch: TFormPatch
     object LowerPartial1: TTabSheet
       Caption = 'Lower Partial 1'
       ImageIndex = 3
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object LowerPartial1SG: TStringGrid
         Left = 0
         Top = 0
-        Width = 781
-        Height = 338
+        Width = 731
+        Height = 331
         Align = alClient
         ColCount = 4
         DefaultColWidth = 175
@@ -425,11 +464,15 @@ object FormPatch: TFormPatch
     object LowerPartial2: TTabSheet
       Caption = 'Lower Partial 2'
       ImageIndex = 4
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object LowerPartial2SG: TStringGrid
         Left = 0
         Top = 0
-        Width = 781
-        Height = 338
+        Width = 731
+        Height = 331
         Align = alClient
         ColCount = 4
         DefaultColWidth = 175
@@ -514,11 +557,15 @@ object FormPatch: TFormPatch
     object LowerCommon: TTabSheet
       Caption = 'Lower Common'
       ImageIndex = 5
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object LowerCommonSG: TStringGrid
         Left = 0
         Top = 0
-        Width = 781
-        Height = 338
+        Width = 731
+        Height = 331
         Align = alClient
         ColCount = 4
         DefaultColWidth = 175
@@ -603,11 +650,15 @@ object FormPatch: TFormPatch
     object Patch: TTabSheet
       Caption = 'Patch'
       ImageIndex = 6
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object PatchSG: TStringGrid
         Left = 0
         Top = 0
-        Width = 781
-        Height = 338
+        Width = 731
+        Height = 331
         Align = alClient
         ColCount = 4
         DefaultColWidth = 175
@@ -695,39 +746,60 @@ object FormPatch: TFormPatch
     Top = 512
     object MenuFormPatchMenu: TMenuItem
       Caption = '&Menu'
-      object MenuItemFormPatchWriteToFile: TMenuItem
-        Caption = '&Write .d50 patch file'
-        OnClick = MenuItemFormPatchWriteToFileClick
-      end
-      object N3: TMenuItem
-        Caption = '-'
-      end
-      object MenuItemFormPatchSendToTempArea: TMenuItem
-        Caption = '&Send to d-50 temp area'
-        OnClick = MenuItemFormPatchSendToTempAreaClick
-      end
-      object MenuItemFormPatchEnforceMinMaxValue: TMenuItem
-        Caption = '&Enforce min/max values'
-        OnClick = MenuItemFormPatchEnforceMinMaxValueClick
-      end
+      ShortCut = 119
       object MenuItemFormPatchStartStopRandom: TMenuItem
         Caption = '&Randomization (start/stop)'
+        ShortCut = 116
         OnClick = MenuItemFormPatchStartStopRandomClick
       end
-      object MenuItemFormPatchPlay: TMenuItem
-        Caption = '&Play Patch'
-        OnClick = MenuItemFormPatchPlayClick
-      end
-      object MenuItemFormPatchAllNotesOff: TMenuItem
-        Caption = '&All Notes Off'
-        OnClick = MenuItemFormPatchAllNotesOffClick
+      object MenuItemFormPatchManualRandomize: TMenuItem
+        Caption = '&Manual Randomize (one-shot)'
+        ShortCut = 117
+        OnClick = MenuItemFormPatchManualRandomizeClick
       end
       object N2: TMenuItem
         Caption = '-'
       end
+      object MenuItemFormPatchWriteToFile: TMenuItem
+        Caption = '&Save .d50 patch file'
+        ShortCut = 118
+        OnClick = MenuItemFormPatchWriteToFileClick
+      end
       object Exportpatchtosyxbinaryfile1: TMenuItem
-        Caption = '&Export .syx binary patch file'
+        Caption = '&Write .syx binary patch file'
         OnClick = Exportpatchtosyxbinaryfile1Click
+      end
+      object N3: TMenuItem
+        Caption = '-'
+      end
+      object MenuItemFormPatchAllNotesOff: TMenuItem
+        Caption = '&All Notes Off'
+        ShortCut = 119
+        OnClick = MenuItemFormPatchAllNotesOffClick
+      end
+      object N4: TMenuItem
+        Caption = '-'
+      end
+      object MenuItemFormPatchPlay: TMenuItem
+        Caption = '&Play Patch'
+        ShortCut = 120
+        OnClick = MenuItemFormPatchPlayClick
+      end
+      object N5: TMenuItem
+        Caption = '-'
+      end
+      object MenuItemFormPatchSendToTempArea: TMenuItem
+        Caption = '&Send to d-50 temp area'
+        ShortCut = 121
+        OnClick = MenuItemFormPatchSendToTempAreaClick
+      end
+      object MenuItemFormPatchEnforceMinMaxValue: TMenuItem
+        Caption = '&Enforce min/max values'
+        ShortCut = 122
+        OnClick = MenuItemFormPatchEnforceMinMaxValueClick
+      end
+      object N6: TMenuItem
+        Caption = '-'
       end
     end
     object MenuFormPatchPresets: TMenuItem
@@ -769,19 +841,23 @@ object FormPatch: TFormPatch
       Caption = '&Rand'
       OnClick = MenuPatchFormSetRandClick
     end
+    object MenuHelp: TMenuItem
+      Caption = '&Help'
+      OnClick = MenuHelpClick
+    end
   end
   object TimerSendPatch: TTimer
     Enabled = False
     Interval = 5000
     OnTimer = TimerSendPatchTimer
-    Left = 332
-    Top = 304
+    Left = 340
+    Top = 152
   end
   object TimerOver2Sec: TTimer
     Enabled = False
     Interval = 2000
     OnTimer = TimerOver2SecTimer
-    Left = 228
-    Top = 304
+    Left = 236
+    Top = 152
   end
 end

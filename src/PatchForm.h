@@ -89,8 +89,8 @@ Converts a string of UTF-8 characters to a Unicode string.
 */
 //---------------------------------------------------------------------------
 
-#ifndef DataGridFormH
-#define DataGridFormH
+#ifndef PatchFormH
+#define PatchFormH
 //---------------------------------------------------------------------------
 #include <System.Classes.hpp>
 #include <System.Diagnostics.hpp>
@@ -111,6 +111,10 @@ Converts a string of UTF-8 characters to a Unicode string.
 #define NOTETIME_TO_INITIAL_ON  100
 #define NOTETIME_TO_OFF         4000
 #define NOTETIME_TO_ON          4000
+
+#define MIN_TIMER 3000
+#define MAX_TIMER 12000
+#define INC_TIMER 1000
 
 // There is a universal SysEx Master-Volume message!!!!!!!!!
 //
@@ -140,7 +144,6 @@ Converts a string of UTF-8 characters to a Unicode string.
 #define MID_PTCH_CHNG   0xc0
 
 // PutShort(msg, d1, d2); // uInt8
-#define RAND_INTERVAL 10000 // 10 seconds
 #define MIDI_BUFSIZE 4096
 //---------------------------------------------------------------------------
 enum tabConst { tUP1, tUP2, tUC, tLP1, tLP2, tLC, tP };
@@ -149,22 +152,7 @@ enum rowConst { rLabel, rVal, rMax, rRand };
 class TFormPatch : public TForm
 {
 __published:    // IDE-managed Components
-    TPageControl *PageControl;
     TMainMenu *MainMenu1;
-    TTabSheet *UpperPartial1;
-    TTabSheet *UpperPartial2;
-    TTabSheet *UpperCommon;
-    TTabSheet *LowerPartial1;
-    TTabSheet *LowerPartial2;
-    TTabSheet *LowerCommon;
-    TTabSheet *Patch;
-    TStringGrid *UpperPartial1SG;
-    TStringGrid *UpperPartial2SG;
-    TStringGrid *UpperCommonSG;
-    TStringGrid *LowerPartial1SG;
-    TStringGrid *LowerPartial2SG;
-    TStringGrid *LowerCommonSG;
-    TStringGrid *PatchSG;
     TMenuItem *MenuFormPatchMenu;
     TMenuItem *MenuItemFormPatchWriteToFile;
     TMenuItem *MenuItemFormPatchEnforceMinMaxValue;
@@ -184,8 +172,31 @@ __published:    // IDE-managed Components
     TMenuItem *MenuPresetsItemSetAll;
     TMenuItem *MenuPatchFormSetRand;
     TMenuItem *Exportpatchtosyxbinaryfile1;
-    TMenuItem *N3;
-    TMenuItem *N2;
+  TMenuItem *MenuItemFormPatchManualRandomize;
+  TMenuItem *N2;
+  TMenuItem *N3;
+  TMenuItem *N4;
+  TMenuItem *N5;
+  TMenuItem *N6;
+  TMenuItem *MenuHelp;
+  TPageControl *PageControl;
+  TTabSheet *UpperPartial1;
+  TStringGrid *UpperPartial1SG;
+  TPanel *Panel1;
+  TTabSheet *UpperPartial2;
+  TStringGrid *UpperPartial2SG;
+  TTabSheet *UpperCommon;
+  TStringGrid *UpperCommonSG;
+  TTabSheet *LowerPartial1;
+  TStringGrid *LowerPartial1SG;
+  TTabSheet *LowerPartial2;
+  TStringGrid *LowerPartial2SG;
+  TTabSheet *LowerCommon;
+  TStringGrid *LowerCommonSG;
+  TTabSheet *Patch;
+  TStringGrid *PatchSG;
+  TButton *ButtonRandInterval;
+  TLabel *LabelRand;
     void __fastcall FormCreate(TObject *Sender);
     void __fastcall SGDblClick(TObject *Sender);
     void __fastcall MenuItemFormPatchWriteToFileClick(TObject *Sender);
@@ -202,6 +213,9 @@ __published:    // IDE-managed Components
     void __fastcall MenuPresetsItemClick(TObject *Sender);
     void __fastcall MenuPatchFormSetRandClick(TObject *Sender);
     void __fastcall Exportpatchtosyxbinaryfile1Click(TObject *Sender);
+  void __fastcall MenuItemFormPatchManualRandomizeClick(TObject *Sender);
+  void __fastcall MenuHelpClick(TObject *Sender);
+  void __fastcall ButtonRandIntervalClick(TObject *Sender);
 private:    // User declarations
     void __fastcall SetRandomization(bool flag);
     void __fastcall EnforceDataRange(int tabIndex);
@@ -224,6 +238,7 @@ private:    // User declarations
     void __fastcall InitDataGrid(int tabIndex);
 
     bool m_enableCellEdit, m_EventsEnabled, m_randomizationOn;
+    int m_currentTimer;
     String m_patchName;
     TStringList *prevGridVals;
     TStringList *origGridVals;

@@ -71,6 +71,7 @@ __published:	// IDE-managed Components
     TButton *ButtonSave;
     TMenuItem *MenuFormSetRandUndo;
     TMenuItem *MenuFormSetRandNone;
+  TMenuItem *MenuFormSetRandHelp;
     void __fastcall ButtonCancelClick(TObject *Sender);
     void __fastcall MenuFormSetRandAllClick(TObject *Sender);
     void __fastcall ButtonOnOffClick(TObject *Sender);
@@ -88,15 +89,19 @@ __published:	// IDE-managed Components
     void __fastcall MenuFormSetRandCommonsClick(TObject *Sender);
     void __fastcall FormKeyDown(TObject *Sender, WORD &Key, TShiftState Shift);
     void __fastcall MenuFormSetRandNoneClick(TObject *Sender);
+  void __fastcall MenuFormSetRandHelpClick(TObject *Sender);
+  void __fastcall ButtonOkClick(TObject *Sender);
+  void __fastcall FormDestroy(TObject *Sender);
 private:	// User declarations
+    void __fastcall InitializeCheckBoxMasks(void);
     void __fastcall DisableButtons(void);
     void __fastcall EnableButtons(void);
-    void __fastcall CopyArray(unsigned __int64 *dest, unsigned __int64 *source, int length);
+    void __fastcall CopyArray(UINT64 *dest, UINT64 *source, int length);
     bool __fastcall MasksEqual();
     void __fastcall SetRandOnOff(bool bOnOff);
     void __fastcall SetGroupBoxMaskFromChecks(TGroupBox *gb);
     void __fastcall SetAll(TGroupBox *gb, bool checked);
-    unsigned __int64 __fastcall GetUInt64(String s);
+    UINT64 __fastcall GetUInt64(String s);
     void __fastcall PatchGroupBoxEnableDisable(void);
     void __fastcall CommonGroupBoxEnableDisable(void);
     void __fastcall PartialGroupBoxEnableDisable(void);
@@ -107,8 +112,18 @@ private:	// User declarations
     // allows the "Rand Cumulative" button to randomize only the
     // parameters that have been set to "On" via this dialog, since it
     // was shown... and that were not set "Off" along the way...
-    unsigned __int64 m_masks[TOTAL_TABS];
-    unsigned __int64 m_masksOld[TOTAL_TABS];
+    UINT64 m_masks[TOTAL_TABS];
+    UINT64 m_masksOld[TOTAL_TABS];
+
+    // ran into a problem... the Tag property was 64-bits but now it maps
+    // to the target platform... 32 - so I can't use the Tag property
+    // for each checkboxes mask - so now the Tag for a checkbox is an index
+    // into these arrays beginning at 1. Index 0 is the overall mask for
+    // the entire group of check-boxes on a panel.
+    UINT64 m_checkPatchMasks[3+1];
+    UINT64 m_checkCommonMasks[11+1];
+    UINT64 m_checkPartialMasks[14+1];
+
     TStringList *slSavedState, *slUndoState;
 
 public:		// User declarations

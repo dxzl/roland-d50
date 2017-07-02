@@ -24,10 +24,12 @@
 // defines
 //---------------------------------------------------------------------------
 // Note: Use String() to wrap this for the overloaded RegHelper write method!
-#define VERSION_STR "Version 1.43: June 11, 2017"
+#define VERSION_STR "Version 1.45: July 2, 2017"
 //---------------------------------------------------------------------------
 
 #define REGISTRY_KEY "\\Software\\Discrete-Time Systems\\RolandD50"
+
+#define DIRECTORY_NAME "\\RolandD50"
 
 // Registry entries we save in HKEY_CURRENT_USER
 #define S9_REGKEY_VERSION "Version"
@@ -35,6 +37,8 @@
 #define S9_REGKEY_MIDI_OUTNAME "MidiOutName"
 #define S9_REGKEY_MIDI_CHAN "MidiChan"
 #define S9_REGKEY_DOC_PATH "DocPath"
+#define S9_REGKEY_RAND_INTERVAL "RandInterval"
+#define S9_REGKEY_CURRENT_PATCH "CurrentPatch"
 
 #define LOAD 1
 #define SAVE 2
@@ -49,6 +53,10 @@
 #define TXLONGTIMEOUT 3100 // 3.1 seconds
 #define TXSHORTTIMEOUT 1100 // 1.1 seconds
 #define TXMIDITIMEOUT 5100 // 5.1 seconds (send entire multi-byte sysex message or packet)
+
+#define DEF_RAND_INTERVAL 5000
+#define DEF_PATCH 0 // "Fantasia"
+
 
 #define MAGIC_NUM_ROL 2349032123 // magic number identifies .rol file
 
@@ -123,17 +131,17 @@
 #define PAR_00 "0000000000000000000000000000000000000000000000000000000000000111" // c00 WG Pitch
 #define PAR_01 "0000000000000000000000000000000000000000000000000000000000011000" // c01 WG Mod
 #define PAR_02 "0000000000000000000000000000000000000000000000000000000011000000" // c02 WG Wave
-#define PAR_03 "0000000000000000000000000000000000000000000000000000111100000000" // c03 WG Pulse Width
+#define PAR_03 "0000000000000000000000000000000000000000000000000001111100000000" // c03 WG Pulse Width
 #define PAR_04 "0000000000000000000000000000000000000000000000110000000000000000" // c04 TVF Bias
 #define PAR_05 "0000000000000000000000000000000000000111110000000000000000000000" // c05 TVF Env Time
 #define PAR_06 "0000000000000000000000000000000011111000000000000000000000000000" // c06 TVF Env Level
-#define PAR_07 "0000000000000000000000000000010000000000001111001110000000000000" // c07 TVF Other
-#define PAR_08 "0000000000000000000000000000001100000000000000000000000000000000" // c08 TVF Mod
+#define PAR_07 "0000000000000000000000000000000000000000001111001110000000000000" // c07 TVF Other
+#define PAR_08 "0000000000000000000000000000011100000000000000000000000000000000" // c08 TVF Mod
 #define PAR_09 "0000000000000000000000000110000000000000000000000000000000000000" // c09 TVA Bias
 #define PAR_10 "0000000000000000000011111000000000000000000000000000000000000000" // c10 TVA Env Time
 #define PAR_11 "0000000000000001111100000000000000000000000000000000000000000000" // c11 TVA Env Level
 #define PAR_12 "0000000000000110000000000001100000000000000000000000000000000000" // c12 TVA Other
-#define PAR_13 "0000000000011000000000000000000000000000000000000000000000000000" // c13 TVA Mod
+#define PAR_13 "0000000000111000000000000000000000000000000000000000000000000000" // c13 TVA Mod
 
 //---------------------------------------------------------------------------
 class TFormMain : public TForm
@@ -149,7 +157,7 @@ __published:  // IDE-managed Components
     TMenuItem *MenuGetTempArea;
     TMenuItem *MenuPutTempArea;
     TMenuItem *N4;
-    TMenuItem *MenuHelp;
+  TMenuItem *MenuAbout;
     TPanel *Panel3;
     TLabel *LabelMidiInDevice;
     TLabel *LabelMidiOutDevice;
@@ -170,6 +178,8 @@ __published:  // IDE-managed Components
     TMenuItem *SaveAll64PatchesinPatchSave1;
     TMenuItem *N2;
     TMenuItem *MenuItemSetWorkingDirectoryPath;
+  TMenuItem *Help1;
+  TMenuItem *MenuRemotelyChangePatch;
 
     void __fastcall MenuGetTempAreaClick(TObject *Sender);
     void __fastcall MenuPutTempAreaClick(TObject *Sender);
@@ -191,6 +201,9 @@ __published:  // IDE-managed Components
     void __fastcall MenuViewPatchGridClick(TObject *Sender);
     void __fastcall SaveAll64PatchesinPatchSave1Click(TObject *Sender);
     void __fastcall MenuItemSetWorkingDirectoryPathClick(TObject *Sender);
+  void __fastcall Help1Click(TObject *Sender);
+  void __fastcall MenuRemotelyChangePatchClick(TObject *Sender);
+  void __fastcall Edit1KeyDown(TObject *Sender, WORD &Key, TShiftState Shift);
 
 private:  // User declarations
     void __fastcall TimerGpTimeout(TObject *Sender);
@@ -224,6 +237,7 @@ private:  // User declarations
     void __fastcall WMDropFile(TWMDropFiles &Msg);
 
     unsigned g_rxByteCount, g_streamCount;
+    int g_randInterval;
     bool g_rxTimeout, g_txTimeout, g_gpTimeout, g_inBufferFull, g_systemBusy;
     bool g_midiOutDataBeingTransmitted, g_streamPlaying, g_abort;
     TMIDI_Device_Input *g_midiIn;
@@ -232,7 +246,7 @@ private:  // User declarations
     String g_DragDropFilePath, g_docPath;
 
     // settings vars
-    int g_midiChan;
+    int g_midiChan, g_currentPatch;
     String g_midi_inname, g_midi_outname;
 
 protected:
@@ -254,6 +268,7 @@ public:    // User declarations
     void __fastcall CloseMidiIn(void);
     void __fastcall OpenMidiOut(bool bStream=false);
     void __fastcall CloseMidiOut(void);
+    void __fastcall PatchChange(void);
     void __fastcall PatchChange(int patch);
     bool __fastcall D50GetTempArea(unsigned __int16 addr,
                    Byte *buf, unsigned __int16 size=D50_PATCH_SECTION_SIZE);
@@ -271,6 +286,8 @@ public:    // User declarations
     __property bool IsPlaying = {read = g_streamPlaying};
     __property bool SystemBusy = {read = g_systemBusy};
     __property int MidiChan = {read = g_midiChan};
+    __property int RandInterval = {read = g_randInterval, write = g_randInterval};
+    __property int CurrentPatch = {read = g_currentPatch};
 };
 //---------------------------------------------------------------------------
 extern PACKAGE TFormMain *FormMain;

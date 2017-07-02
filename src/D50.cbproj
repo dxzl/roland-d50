@@ -97,11 +97,11 @@
     <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
         <UsePackages>false</UsePackages>
         <DynamicRTL>false</DynamicRTL>
-        <VerInfo_MinorVer>44</VerInfo_MinorVer>
+        <VerInfo_MinorVer>45</VerInfo_MinorVer>
         <VerInfo_PreRelease>true</VerInfo_PreRelease>
         <VerInfo_Debug>true</VerInfo_Debug>
         <VerInfo_Private>true</VerInfo_Private>
-        <VerInfo_Keys>CompanyName=Discrete-Time Systems;FileDescription=$(MSBuildProjectName);FileVersion=1.44.0.0;InternalName=;LegalCopyright=2017;LegalTrademarks=;OriginalFilename=D50.exe;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.44.0.0;Comments=Author: Scott Swift;PrivateBuild=</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=Discrete-Time Systems;FileDescription=$(MSBuildProjectName);FileVersion=1.45.0.0;InternalName=;LegalCopyright=2017;LegalTrademarks=;OriginalFilename=D50.exe;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.45.0.0;Comments=Author: Scott Swift;PrivateBuild=</VerInfo_Keys>
         <Icon_MainIcon>Colorize.ico</Icon_MainIcon>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Locale>1033</VerInfo_Locale>
@@ -117,23 +117,23 @@
         <AppEnableRuntimeThemes>true</AppEnableRuntimeThemes>
         <AppEnableHighDPI>true</AppEnableHighDPI>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-        <VerInfo_MinorVer>44</VerInfo_MinorVer>
+        <VerInfo_MinorVer>45</VerInfo_MinorVer>
         <VerInfo_Locale>1033</VerInfo_Locale>
-        <VerInfo_Keys>CompanyName=Discrete-Time Systems;FileDescription=$(MSBuildProjectName);FileVersion=1.44.0.0;InternalName=;LegalCopyright=2017;LegalTrademarks=;OriginalFilename=D50.exe;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.44.0.0;Comments=Author: Scott Swift</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=Discrete-Time Systems;FileDescription=$(MSBuildProjectName);FileVersion=1.45.0.0;InternalName=;LegalCopyright=2017;LegalTrademarks=;OriginalFilename=D50.exe;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.45.0.0;Comments=Author: Scott Swift</VerInfo_Keys>
         <DynamicRTL>false</DynamicRTL>
         <UsePackages>false</UsePackages>
         <Icon_MainIcon>Colorize.ico</Icon_MainIcon>
         <LinkPackageStatics>rtl.lib;vcl.lib;AsyncProCR.lib;vclx.lib</LinkPackageStatics>
     </PropertyGroup>
     <ItemGroup>
+        <CppCompile Include="ChangePatchForm.cpp">
+            <Form>FormChangePatch</Form>
+            <FormType>dfm</FormType>
+            <DependentOn>ChangePatchForm.h</DependentOn>
+            <BuildOrder>15</BuildOrder>
+        </CppCompile>
         <CppCompile Include="D50.cpp">
             <BuildOrder>0</BuildOrder>
-        </CppCompile>
-        <CppCompile Include="DataGridForm.cpp">
-            <Form>FormPatch</Form>
-            <FormType>dfm</FormType>
-            <DependentOn>DataGridForm.h</DependentOn>
-            <BuildOrder>12</BuildOrder>
         </CppCompile>
         <CppCompile Include="DefaultStrings.cpp">
             <DependentOn>DefaultStrings.h</DependentOn>
@@ -169,6 +169,12 @@
         <DelphiCompile Include="Midi\utilities_math.pas">
             <BuildOrder>10</BuildOrder>
         </DelphiCompile>
+        <CppCompile Include="PatchForm.cpp">
+            <Form>FormPatch</Form>
+            <FormType>dfm</FormType>
+            <DependentOn>PatchForm.h</DependentOn>
+            <BuildOrder>12</BuildOrder>
+        </CppCompile>
         <CppCompile Include="RegHelper.cpp">
             <DependentOn>RegHelper.h</DependentOn>
             <BuildOrder>3</BuildOrder>
@@ -184,8 +190,9 @@
             <BuildOrder>14</BuildOrder>
         </CppCompile>
         <FormResources Include="SetRandForm.dfm"/>
-        <FormResources Include="DataGridForm.dfm"/>
+        <FormResources Include="PatchForm.dfm"/>
         <FormResources Include="MainForm.dfm"/>
+        <FormResources Include="ChangePatchForm.dfm"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

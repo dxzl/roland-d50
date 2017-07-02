@@ -64,7 +64,6 @@ object FormMain: TFormMain
     Height = 268
     Align = alLeft
     TabOrder = 0
-    ExplicitHeight = 241
     object FilterComboBox1: TFilterComboBox
       Left = 1
       Top = 1
@@ -89,7 +88,6 @@ object FormMain: TFormMain
       PopupMenu = PopupMenuFileListBox
       TabOrder = 1
       OnDblClick = FileListBox1DblClick
-      ExplicitHeight = 197
     end
     object Edit1: TEdit
       Left = 1
@@ -99,7 +97,7 @@ object FormMain: TFormMain
       Align = alBottom
       TabOrder = 2
       Text = '*.d50'
-      ExplicitTop = 219
+      OnKeyDown = Edit1KeyDown
     end
   end
   object Panel1: TPanel
@@ -109,9 +107,8 @@ object FormMain: TFormMain
     Height = 268
     Align = alClient
     TabOrder = 1
-    ExplicitHeight = 241
     object Memo1: TMemo
-      Left = 1
+      Left = 5
       Top = 63
       Width = 472
       Height = 204
@@ -120,7 +117,6 @@ object FormMain: TFormMain
       ReadOnly = True
       ScrollBars = ssVertical
       TabOrder = 0
-      ExplicitHeight = 177
     end
     object Panel3: TPanel
       Left = 6
@@ -251,9 +247,14 @@ object FormMain: TFormMain
       object N2: TMenuItem
         Caption = '-'
       end
+      object MenuRemotelyChangePatch: TMenuItem
+        Caption = '&Remotely Change Patch'
+        ShortCut = 16501
+        OnClick = MenuRemotelyChangePatchClick
+      end
       object SaveAll64PatchesinPatchSave1: TMenuItem
         Caption = '&Save All 64 Patches in ./PatchSave'
-        ShortCut = 16501
+        ShortCut = 16502
         OnClick = SaveAll64PatchesinPatchSave1Click
       end
       object N4: TMenuItem
@@ -264,11 +265,15 @@ object FormMain: TFormMain
         ShortCut = 16506
         OnClick = MenuViewPatchGridClick
       end
-      object MenuHelp: TMenuItem
+      object MenuAbout: TMenuItem
         Caption = '&About'
         ShortCut = 16507
         OnClick = MenuAboutClick
       end
+    end
+    object Help1: TMenuItem
+      Caption = '&Help'
+      OnClick = Help1Click
     end
   end
   object Timer1: TTimer

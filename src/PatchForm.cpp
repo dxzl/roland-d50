@@ -4,7 +4,7 @@
 #pragma hdrstop
 // Include header files common to all files before this directive!
 
-#include "DataGridForm.h"
+#include "PatchForm.h"
 #include "SetRandForm.h"
 //---------------------------------------------------------------------------
 #pragma package(smart_init)
@@ -28,23 +28,40 @@ void __fastcall TFormPatch::FormCreate(TObject *Sender)
 
     InitDataGrid();
 
+    m_currentTimer = FormMain->RandInterval;
+    LabelRand->Caption = "Randomization: Off";
+
     FormSetRand = new TFormSetRand(this);
 }
 //---------------------------------------------------------------------------
 void __fastcall TFormPatch::FormDestroy(TObject *Sender)
 {
-    if (prevGridVals) delete prevGridVals;
-    if (origGridVals) delete origGridVals;
-
     if (FormSetRand)
     {
         delete FormSetRand;
         FormSetRand = NULL;
     }
+
+    if (prevGridVals)
+    {
+        delete prevGridVals;
+        prevGridVals = NULL;
+    }
+
+    if (origGridVals)
+    {
+        delete origGridVals;
+        origGridVals = NULL;
+    }
 }
 //---------------------------------------------------------------------------
 void __fastcall TFormPatch::FormClose(TObject *Sender, TCloseAction &Action)
 {
+    if (FormMain->IsPlaying)
+        FormMain->CloseMidiOut();
+
+    FormMain->PatchChange(); // set current patch back
+
     if (m_randomizationOn)
         SetRandomization(false); // this restores original patch
     else // if closing, put back original patch
@@ -56,6 +73,10 @@ void __fastcall TFormPatch::FormClose(TObject *Sender, TCloseAction &Action)
         // Write data-grid to D-50 Temp-area
         PutTempArea();
     }
+
+    if (m_currentTimer >= MIN_TIMER && m_currentTimer <= MAX_TIMER)
+      FormMain->RandInterval = m_currentTimer;
+
 }
 //---------------------------------------------------------------------------
 void __fastcall TFormPatch::FormKeyDown(TObject *Sender, WORD &Key, TShiftState Shift)
@@ -63,21 +84,21 @@ void __fastcall TFormPatch::FormKeyDown(TObject *Sender, WORD &Key, TShiftState 
     if (FormMain->SystemBusy)
         return;
 
-    // Using F7/F8 because we want the same buttons to do the same things in
-    // SetRandForm.cpp - and we need Space to toggle the checkboxes there,
-    // and Return clicks the default button
-    if (Key == VK_F6)
-    {
-        if (m_randomizationOn)
-            SetRandomization(false);
+    if (FormMain->IsPlaying)
+        FormMain->CloseMidiOut();
 
-        FormMain->PatchChange(0); // silence playing sounds
-    }
-    else if (Key == VK_F7)
+    if (Key == VK_F5)
+        MenuItemFormPatchStartStopRandomClick(NULL);
+    else if (Key == VK_F6)
         ManualRandomize();
-    else if (Key == VK_F8)
-        // save column 1 for all tabs in comma-separated text-file, one line per tab
+    else if (Key == VK_F7)
         MenuItemFormPatchWriteToFileClick(NULL);
+    else if (Key == VK_F8)
+        MenuItemFormPatchAllNotesOffClick(NULL);
+    else if (Key == VK_F9)
+        MenuItemFormPatchPlayClick(NULL);
+    else if (Key == VK_F10)
+        PutTempArea();
     else if (Key == VK_ESCAPE)
     {
         if (m_randomizationOn)
@@ -97,6 +118,12 @@ void __fastcall TFormPatch::ManualRandomize(void)
 // Public (called from FormKeyDown() and SetRandForm()
 void __fastcall TFormPatch::ManualRandomize(unsigned __int64 masks[])
 {
+    if (FormMain->SystemBusy)
+        return;
+
+    if (FormMain->IsPlaying)
+        FormMain->CloseMidiOut();
+
 //    bool bSaveRand = m_randomizationOn; // save entry state
 
     // if auto-randomization on, turn off
@@ -130,7 +157,6 @@ void __fastcall TFormPatch::TimerSendPatchTimer(TObject *Sender)
 
     // transmit to the Roland D-50
     PutTempArea();
-    FormMain->DelayGpTimer(100);
 
     MenuItemFormPatchPlayClick(NULL); // play it!
 
@@ -437,19 +463,29 @@ void __fastcall TFormPatch::SetRandomization(bool flag)
 {
     TimerOver2Sec->Enabled = false;
     TimerSendPatch->Enabled = false;
-    FormMain->PatchChange(0); // silence playing sounds
+    FormMain->PatchChange(); // silence playing sounds
+
+    if (m_currentTimer < MIN_TIMER)
+    {
+      m_currentTimer = MIN_TIMER;
+      TimerSendPatch->Enabled = false;
+    }
+
+    if (TimerSendPatch->Interval != m_currentTimer)
+      TimerSendPatch->Interval = m_currentTimer;
 
     if(flag)
     {
         MenuItemFormPatchStartStopRandom->Checked = true;
+        LabelRand->Caption = "Randomization: " + FormatFloat("0.0",(float)m_currentTimer/1000.);
 
         TimerSendPatchTimer(NULL); // start randomizing immediately
-        TimerSendPatch->Interval = RAND_INTERVAL;;
         TimerSendPatch->Enabled = true;
     }
     else // off
     {
         MenuItemFormPatchStartStopRandom->Checked = false;
+        LabelRand->Caption = "Randomization: Off";
 
         // Restore original
         if (!WriteToGrid(origGridVals, false))
@@ -1002,16 +1038,16 @@ TStringGrid * __fastcall TFormPatch::GetSgPtr(int tabIndex)
 // we need a lock-out flag
 void __fastcall TFormPatch::PutTempArea(void)
 {
-    while (FormMain->SystemBusy);
+    if (FormMain->SystemBusy)
+        return;
+
+    if (FormMain->IsPlaying)
+        FormMain->CloseMidiOut();
 
     Byte buf[SYSEX_PATCH_SECTION_SIZE];
 
     try
     {
-        FormMain->CloseMidiOut(); // stop any stream being played
-
-        FormMain->PatchChange(0); // silence playing sounds
-
         FormMain->OpenMidiOut();
 
         for (int ii = 0; ii < TOTAL_TABS; ii++)
@@ -1028,7 +1064,11 @@ void __fastcall TFormPatch::PutTempArea(void)
 //---------------------------------------------------------------------------
 void __fastcall TFormPatch::GetTempArea(void)
 {
-    while (FormMain->SystemBusy);
+    if (FormMain->SystemBusy)
+        return;
+
+    if (FormMain->IsPlaying)
+        FormMain->CloseMidiOut();
 
     Byte buf[SYSEX_PATCH_SECTION_SIZE];
 
@@ -1065,7 +1105,11 @@ void __fastcall TFormPatch::GetTempArea(void)
 //---------------------------------------------------------------------------
 void __fastcall TFormPatch::LoadPatchFileIntoD50AndDataGrid(String sPath)
 {
-    while (FormMain->SystemBusy);
+    if (FormMain->SystemBusy)
+        return;
+
+    if (FormMain->IsPlaying)
+        FormMain->CloseMidiOut();
 
     TStringList *sl = NULL;
 
@@ -1158,8 +1202,8 @@ void __fastcall TFormPatch::LoadPatchFileIntoD50AndDataGrid(String sPath)
         }
         __finally
         {
-            if (sl)
-                delete sl;
+            if (buf)
+                delete [] buf;
             if (h)
                 FileClose(h);
         }
@@ -1180,7 +1224,6 @@ void __fastcall TFormPatch::LoadPatchFileIntoD50AndDataGrid(String sPath)
 
         this->Visible = true;
 
-        FormMain->DelayGpTimer(100);
         MenuItemFormPatchPlayClick(NULL); // play it!
     }
 }
@@ -1190,13 +1233,13 @@ void __fastcall TFormPatch::MenuItemFormPatchAllNotesOffClick(TObject *Sender)
     if (m_randomizationOn)
         SetRandomization(false);
 
-    FormMain->PatchChange(0); // silence playing sounds
+    FormMain->PatchChange(); // silence playing sounds and revert to base patch
 }
 //---------------------------------------------------------------------------
 void __fastcall TFormPatch::MenuItemFormPatchPlayClick(TObject *Sender)
 {
-    if (!FormMain->IsPlaying)
-        FormMain->PlayStream(&SEQ1[0], SIZESEQ1, 96, 500000-(50000*4));
+//    FormMain->DelayGpTimer(100); // let any previous command finish
+    FormMain->PlayStream(&SEQ1[0], SIZESEQ1, 96, 500000-(50000*4));
 }
 //---------------------------------------------------------------------------
 void __fastcall TFormPatch::MenuPresetsItemClick(TObject *Sender)
@@ -1208,7 +1251,7 @@ void __fastcall TFormPatch::MenuPresetsItemClick(TObject *Sender)
         TMenuItem *mi = (TMenuItem *)Sender;
         int presetNum = mi->Tag;
         //       ShowMessage("Tab index: " + String(idx) + " tag: " + String(presetNum));
-        bool *p = NULL;
+        bool *p;
         switch (tabIndex)
         {
             case tUP1:
@@ -1277,6 +1320,52 @@ void __fastcall TFormPatch::MenuPresetsItemClick(TObject *Sender)
 void __fastcall TFormPatch::MenuPatchFormSetRandClick(TObject *Sender)
 {
     FormSetRand->Visible = true;
+}
+//---------------------------------------------------------------------------
+void __fastcall TFormPatch::MenuItemFormPatchManualRandomizeClick(TObject *Sender)
+{
+    ManualRandomize();
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TFormPatch::MenuHelpClick(TObject *Sender)
+{
+  String sHelp =
+"Each sound-parameter for the D-50 has a corresponding \"Random Flag\". Only parameters with the flag set to On are allowed to change to new randomly generated values when you press F6.\n\n"
+"The idea is to set a patch on the D-50 you want to start from, then set the parameters you want to allow to randomly vary. Then you press F6 while listening to new sounds until you hear something you want to keep. Press F7 to keep the sound as a patch (it appears in the left panel of the main program).\n\n"
+"Double-click an item in the \"Random Mode\" column to toggle randomization On/Off for that particular parameter.\n\n"
+"F5 - Start/Stop timer-driven periotic random new-sound generation (click on the small button in the lower left corner to cycle through allowed times).\n"
+"F6 - Generates a new random sound each time you press F6.\n"
+"F7 - Write the currently playing new sound to a new patch file in Documents\\RolandD50. The name of the file is auto-generated and contains all information from the patch-grid. The files appear in the main program in the left panel. Right-click a file to send it to the D-50 temp-area or delete it. Renamed the file by typong a new name at the bottom and pressing Enter.\n"
+"F8 - All notes off (Restore base patch).\n"
+"F9 - Play a test-sequence of midi nots so you can hear the current sound.\n"
+"F10 - Transmit snapshot of the current patch (with your edits) to the D-50.\n";
+
+  ShowMessage(sHelp);
+}
+//---------------------------------------------------------------------------
+void __fastcall TFormPatch::ButtonRandIntervalClick(TObject *Sender)
+{
+  if (!m_randomizationOn)
+    SetRandomization(true);
+  else // running...
+  {
+    m_currentTimer += INC_TIMER;
+    if (m_currentTimer > MAX_TIMER)
+    {
+      SetRandomization(false);
+      m_currentTimer = MIN_TIMER - INC_TIMER;
+      TimerSendPatch->Interval = m_currentTimer;
+    }
+    else
+    {
+      TimerSendPatch->Enabled = false;
+      TimerSendPatch->Interval = m_currentTimer;
+      LabelRand->Caption = "Randomization: " + FormatFloat("0.0",(float)m_currentTimer/1000.);
+      TimerSendPatch->Enabled = true;
+    }
+  }
+  Application->ProcessMessages();
 }
 //---------------------------------------------------------------------------
 

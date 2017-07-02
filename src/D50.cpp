@@ -7,8 +7,9 @@
 #include <Vcl.Styles.hpp>
 #include <Vcl.Themes.hpp>
 USEFORM("SetRandForm.cpp", FormSetRand);
-USEFORM("DataGridForm.cpp", FormPatch);
+USEFORM("PatchForm.cpp", FormPatch);
 USEFORM("MainForm.cpp", FormMain);
+USEFORM("ChangePatchForm.cpp", FormChangePatch);
 //---------------------------------------------------------------------------
 int WINAPI _tWinMain(HINSTANCE, HINSTANCE, LPTSTR, int)
 {
@@ -18,8 +19,8 @@ int WINAPI _tWinMain(HINSTANCE, HINSTANCE, LPTSTR, int)
 		Application->MainFormOnTaskBar = true;
 		TStyleManager::TrySetStyle("Obsidian");
 		Application->CreateForm(__classid(TFormMain), &FormMain);
-         Application->CreateForm(__classid(TFormPatch), &FormPatch);
-         Application->Run();
+     Application->CreateForm(__classid(TFormPatch), &FormPatch);
+     Application->Run();
 	}
 	catch (Exception &exception)
 	{

@@ -77,7 +77,8 @@
 // Include header files common to all files before this directive!
 
 #include "RegHelper.h"
-#include "DataGridForm.h"
+#include "PatchForm.h"
+#include "ChangePatchForm.h"
 #include <stdio.h>
 #include <math.h>
 //---------------------------------------------------------------------------
@@ -100,7 +101,8 @@ void __fastcall TFormMain::FormCreate(TObject *Sender)
     g_streamCount = 0;
     g_streamPlaying = false;
     g_midiOutDataBeingTransmitted = false;
-    
+
+    g_randInterval = 0;
     g_rxByteCount = 0;
     g_DragDropFilePath = "";
     g_rxTimeout = false;
@@ -109,6 +111,7 @@ void __fastcall TFormMain::FormCreate(TObject *Sender)
     g_inBufferFull = false;
     g_abort = false;
     g_systemBusy = false;
+    g_currentPatch = 0;
 
     // read settings from registry HKEY_CURRENT_USER
     // \\Software\\Discrete-Time Systems\\AkaiS950
@@ -139,6 +142,9 @@ void __fastcall TFormMain::FormCreate(TObject *Sender)
                 g_midi_inname = pReg->ReadSetting(S9_REGKEY_MIDI_INNAME);
                 g_midi_outname = pReg->ReadSetting(S9_REGKEY_MIDI_OUTNAME);
                 g_docPath = pReg->ReadSetting(S9_REGKEY_DOC_PATH);
+                pReg->ReadSetting(S9_REGKEY_RAND_INTERVAL, g_randInterval, DEF_RAND_INTERVAL);
+                pReg->ReadSetting(S9_REGKEY_CURRENT_PATCH, g_currentPatch, DEF_PATCH);
+
             }
             else
             {
@@ -147,6 +153,8 @@ void __fastcall TFormMain::FormCreate(TObject *Sender)
                 g_midi_inname = "";
                 g_midi_outname = "";
                 g_docPath = "";
+                g_randInterval = DEF_RAND_INTERVAL;
+                g_currentPatch = DEF_PATCH;
             }
         }
         catch (...)
@@ -156,6 +164,8 @@ void __fastcall TFormMain::FormCreate(TObject *Sender)
             g_midi_inname = "";
             g_midi_outname = "";
             g_docPath = "";
+            g_randInterval = DEF_RAND_INTERVAL;
+            g_currentPatch = DEF_PATCH;
         }
 
         if (g_docPath.IsEmpty() || !DirectoryExists(g_docPath))
@@ -173,7 +183,7 @@ void __fastcall TFormMain::FormCreate(TObject *Sender)
                 if (!DirectoryExists(g_docPath))
                     g_docPath = exePath;
 
-                g_docPath += "\\RolandD50";
+                g_docPath += DIRECTORY_NAME;
 
                 if (!DirectoryExists(g_docPath))
                 {
@@ -246,6 +256,8 @@ void __fastcall TFormMain::FormClose(TObject *Sender, TCloseAction &Action)
             pReg->WriteSetting(S9_REGKEY_MIDI_INNAME, g_midi_inname);
             pReg->WriteSetting(S9_REGKEY_MIDI_OUTNAME, g_midi_outname);
             pReg->WriteSetting(S9_REGKEY_DOC_PATH, g_docPath);
+            pReg->WriteSetting(S9_REGKEY_RAND_INTERVAL, g_randInterval);
+            pReg->WriteSetting(S9_REGKEY_CURRENT_PATCH, g_currentPatch);
         }
     }
     __finally
@@ -312,6 +324,7 @@ void __fastcall TFormMain::TimerDemoTimeout(TObject *Sender)
                      "\r\n(Click \"Menu->Get temp area\" to retry!)\r\n");
     else
     {
+        PatchChange(); // set the patch # we store in the registry
         FormPatch->GetTempArea(); // load D-50 temp-area into data grid and save original values
         Memo1->Clear();
     }
@@ -319,7 +332,11 @@ void __fastcall TFormMain::TimerDemoTimeout(TObject *Sender)
 //---------------------------------------------------------------------------
 void __fastcall TFormMain::TimerFileDrop(TObject *Sender)
 {
-    if (SystemBusy) return;
+    if (SystemBusy)
+        return;
+
+    if (IsPlaying)
+        CloseMidiOut();
 
     Timer1->Enabled = false;
     if (!g_DragDropFilePath.IsEmpty())
@@ -388,14 +405,14 @@ void __fastcall TFormMain::PopupMenuItemOpenClick(TObject *Sender)
     FormPatch->LoadPatchFileIntoD50AndDataGrid(FileListBox1->FileName);
 }
 //---------------------------------------------------------------------------
-void __fastcall TFormMain::FileListBox1DblClick(TObject *Sender)
-{
-    FormPatch->LoadPatchFileIntoD50AndDataGrid(FileListBox1->FileName);
-}
-//---------------------------------------------------------------------------
 void __fastcall TFormMain::PopupMenuItemDeleteClick(TObject *Sender)
 {
     DeleteSelectedFile();
+}
+//---------------------------------------------------------------------------
+void __fastcall TFormMain::FileListBox1DblClick(TObject *Sender)
+{
+    FormPatch->LoadPatchFileIntoD50AndDataGrid(FileListBox1->FileName);
 }
 //---------------------------------------------------------------------------
 void __fastcall TFormMain::MenuGetTempAreaClick(TObject *Sender)
@@ -579,6 +596,32 @@ void __fastcall TFormMain::DeleteSelectedFile(void)
     }
 }
 //---------------------------------------------------------------------------
+void __fastcall TFormMain::Edit1KeyDown(TObject *Sender, WORD &Key, TShiftState Shift)
+{
+    TEdit* p = reinterpret_cast<TEdit*>(Sender);
+    if (!p)
+      return;
+
+    if (Key == VK_RETURN)
+    {
+      int idx = FileListBox1->ItemIndex;
+      int count = FileListBox1->Count;
+
+      if (count != 1 || idx < 0 || idx >= count)
+          return;
+
+      String newName = p->Text;
+      String sName = FileListBox1->Items->Strings[idx];
+      if (FileExists(sName) && !FileExists(newName))
+      {
+        if (!RenameFile(sName, newName))
+          ShowMessage("Invalid name...");
+        else
+          FileListBox1->Items->Strings[idx] = newName;
+      }
+    }
+}
+//---------------------------------------------------------------------------
 // sysExOnly defaults true
 // set bufferSize and/or bufferCount 0 to allow the defaults and receive normal SysEx
 // complete messages (16 buffers of 4096 bytes each)
@@ -661,6 +704,13 @@ void __fastcall TFormMain::CloseMidiOut(void)
     g_abort = false;
 }
 //---------------------------------------------------------------------------
+// overloaded...
+
+void __fastcall TFormMain::PatchChange(void)
+{
+    PatchChange(g_currentPatch);
+}
+
 void __fastcall TFormMain::PatchChange(int patch)
 {
     if (!g_midiOut)
@@ -683,6 +733,9 @@ void __fastcall TFormMain::PatchChange(int patch)
         CloseMidiOut();
 
     DelayGpTimer(35); // put some delay between successive calls to this!
+
+    if (g_currentPatch != patch)
+        g_currentPatch = patch;
 }
 //---------------------------------------------------------------------------
 // Master Volume
@@ -1465,6 +1518,14 @@ void __fastcall TFormMain::PlayStream(unsigned long *pSequence, int size,
     if (!g_midiOut)
         return;
 
+    // if already playing stop
+    if (g_streamPlaying)
+    {
+        g_midiOut->StreamStop();
+        g_streamPlaying = false;
+        g_streamCount = 0;
+    }
+
     // put the sequence in a buffer so we can change the midi-channel on
     // all note evenes
     unsigned long *buf = NULL;
@@ -1502,14 +1563,11 @@ void __fastcall TFormMain::PlayStream(unsigned long *pSequence, int size,
 bool __fastcall TFormMain::SendStream(unsigned long *pSequence, int size,
                                                     int timeDiv, int tempo)
 {
-    if (!g_midiOut)
+    if (!g_midiOut || SystemBusy)
         return false;
 
-    while (SystemBusy); // wait for any delay to finish
-
-    // wait for old stream to finish
-    while (g_streamPlaying || g_midiOutDataBeingTransmitted)
-        Application->ProcessMessages();
+    if (IsPlaying)
+        CloseMidiOut();
 
     try
     {
@@ -1693,7 +1751,11 @@ void __fastcall TFormMain::streamws(Byte *inBuf, int inSize, int deltaTime)
 //---------------------------------------------------------------------------
 bool __fastcall TFormMain::IsD50Connected(void)
 {
-    while (FormMain->SystemBusy);
+    if (SystemBusy)
+        return false;
+
+    if (IsPlaying)
+        CloseMidiOut();
 
     Byte buf[8+D50_PATCH_SECTION_SIZE+2];
 
@@ -1746,6 +1808,45 @@ bool __fastcall TFormMain::IsD50Connected(void)
         FormMain->CloseMidiIn();
     }
     return false;
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TFormMain::Help1Click(TObject *Sender)
+{
+  String sHelp =
+"Roland D-50 FM Synthesis Patch Generator Instructions\n\n"
+"1. Set up your USB midi interface on your computer. The Patch Generator program will try to locate the midi ports automatically when you start it, but you can also set them from the boxes at the top of the program.\n"
+"2. Connect both In and Out midi cables directly between the D-50 and your USB interface.\n"
+"3. Run the patch generator program. It will detect your D-50 automatically and pop up a new window with data from the selected patch on your D-50. If there is a connection problem you will see an error message in a few seconds.\n"
+"4. Click \"Menu->Working Directory Path\" to set the location where you want to store your patch files. The program will create a folder for you called \"RolandD50\" in Documents.\n"
+"5. To Save all 64 patches presently on your D-50, click \"Menu->Save all 64 patches\". This will place 64 individual patch files in a folder called RolandD50\\PatchSave.\n"
+"6. To start generating new sounds, first select a patch on your D-50 which will be the \"starting point\" for new, modified sounds.\n"
+"   Click Menu->Remotely Change Patch and chose a base patch to use as a starting point.\n"
+"7. Make sure you sound from you D-50 is turned up so you can hear it ok.\n"
+"8. In the menu for the patch's window (not the main window) click \"Menu->Randomization\" to start/stop new sound creation. A new patch will be generated every 5-10 seconds and a test-note sequence will be played. When you hear something interesting, you can save the new patch to a file in your RolandD50 folder by pressing F7.\n\n"
+"The left panel shows a list of patches that you have generated. Patch file-names are generated automatically.\n"
+"To delete a patch, click it and press the Del key, or right-click and choose Delete in the pop-up menu.\n"
+"To rename a patch, click it and change the name in the lower box then press Enter.\n"
+"To send a patch to your D-50, double-click it or right-click and choose Play from the pop-up menu.\n";
+
+  ShowMessage(sHelp);
+}
+//---------------------------------------------------------------------------
+void __fastcall TFormMain::MenuRemotelyChangePatchClick(TObject *Sender)
+{
+  // Send Patch Change control-message to the D-50
+  Application->CreateForm(__classid(TFormChangePatch), &FormChangePatch);
+  FormChangePatch->Patch = g_currentPatch;
+  int patch = -1;
+  if (FormChangePatch->ShowModal() == mrOk)
+    patch = FormChangePatch->Patch;
+  FormChangePatch->Release();
+
+  if (patch >= 0)
+  {
+    PatchChange(patch);
+    TimerDemoTimeout(NULL); // fetch the temp-area data
+  }
 }
 //---------------------------------------------------------------------------
 
