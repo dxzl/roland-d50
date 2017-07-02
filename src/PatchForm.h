@@ -217,6 +217,7 @@ __published:    // IDE-managed Components
   void __fastcall MenuHelpClick(TObject *Sender);
   void __fastcall ButtonRandIntervalClick(TObject *Sender);
 private:    // User declarations
+    void __fastcall Restore(void);
     void __fastcall SetRandomization(bool flag);
     void __fastcall EnforceDataRange(int tabIndex);
 //    bool * __fastcall GetDefRandPtr(int tabIndex);

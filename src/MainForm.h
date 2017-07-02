@@ -284,7 +284,7 @@ public:    // User declarations
 
     __property String DocPath = {read = g_docPath};
     __property bool IsPlaying = {read = g_streamPlaying};
-    __property bool SystemBusy = {read = g_systemBusy};
+    __property bool SystemBusy = {read = g_systemBusy, write = g_systemBusy};
     __property int MidiChan = {read = g_midiChan};
     __property int RandInterval = {read = g_randInterval, write = g_randInterval};
     __property int CurrentPatch = {read = g_currentPatch};

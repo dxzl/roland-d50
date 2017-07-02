@@ -57,26 +57,30 @@ void __fastcall TFormPatch::FormDestroy(TObject *Sender)
 //---------------------------------------------------------------------------
 void __fastcall TFormPatch::FormClose(TObject *Sender, TCloseAction &Action)
 {
-    if (FormMain->IsPlaying)
-        FormMain->CloseMidiOut();
-
-    FormMain->PatchChange(); // set current patch back
-
     if (m_randomizationOn)
         SetRandomization(false); // this restores original patch
     else // if closing, put back original patch
-    {
-        // Restore original patch
-        if (!WriteToGrid(origGridVals, false))
-            return;
-
-        // Write data-grid to D-50 Temp-area
-        PutTempArea();
-    }
+        Restore();
 
     if (m_currentTimer >= MIN_TIMER && m_currentTimer <= MAX_TIMER)
       FormMain->RandInterval = m_currentTimer;
 
+}
+//---------------------------------------------------------------------------
+void __fastcall TFormPatch::Restore(void)
+{
+    if (FormMain->IsPlaying)
+        FormMain->CloseMidiOut();
+
+    // set base patch on D-50 and stop stream-playback or stuck notes
+    FormMain->PatchChange();
+
+    // Restore original grid (from either patch file or from loading temp-area)
+    if (!WriteToGrid(origGridVals, false))
+        return;
+
+    // Write data-grid to D-50 Temp-area
+    PutTempArea();
 }
 //---------------------------------------------------------------------------
 void __fastcall TFormPatch::FormKeyDown(TObject *Sender, WORD &Key, TShiftState Shift)
@@ -121,14 +125,14 @@ void __fastcall TFormPatch::ManualRandomize(unsigned __int64 masks[])
     if (FormMain->SystemBusy)
         return;
 
+    // if auto-randomization on, turn off
+    if (m_randomizationOn)
+        SetRandomization(false);
+
     if (FormMain->IsPlaying)
         FormMain->CloseMidiOut();
 
 //    bool bSaveRand = m_randomizationOn; // save entry state
-
-    // if auto-randomization on, turn off
-    if (m_randomizationOn)
-        SetRandomization(false);
 
 //    if (bSaveRand)
         // if user hits return and we are randomizing, we stop (to stop timer)
@@ -147,6 +151,12 @@ void __fastcall TFormPatch::ManualRandomize(unsigned __int64 masks[])
 //---------------------------------------------------------------------------
 void __fastcall TFormPatch::TimerSendPatchTimer(TObject *Sender)
 {
+    if (FormMain->SystemBusy)
+        return;
+
+    if (FormMain->IsPlaying)
+        FormMain->CloseMidiOut();
+
     // save previous values (if user hits the space-bar to save within
     // a few seconds after the timer triggered a change, we save previous
     // patch's data instead :-)
@@ -216,6 +226,11 @@ void __fastcall TFormPatch::Exportpatchtosyxbinaryfile1Click(TObject *Sender)
 // Clear bSyx to write patch as custom .d50 text-file with all grid-info preserved
 void __fastcall TFormPatch::WritePatchToFile(bool bSyx)
 {
+    if (FormMain->SystemBusy)
+        return;
+
+    FormMain->SystemBusy = true;
+
     // if randomization is on and we just changed the grid as the user was trying
     // to save the sound he was hearing, we want to instead save the previously
     // backed-up string-list...
@@ -289,10 +304,14 @@ void __fastcall TFormPatch::WritePatchToFile(bool bSyx)
                 delete allGrids;
         }
     }
+    FormMain->SystemBusy = false;
 }
 //---------------------------------------------------------------------------
 void __fastcall TFormPatch::SaveSyxFile(String filePath, TStringList *sl)
 {
+    if (FormMain->SystemBusy)
+        return;
+
     if (!sl || sl->Count < TOTAL_TABS*(TOTAL_COLS-1))
     {
         ShowMessage("Incorrect string-list format!");
@@ -304,6 +323,8 @@ void __fastcall TFormPatch::SaveSyxFile(String filePath, TStringList *sl)
 
     try
     {
+        FormMain->SystemBusy = true;
+
         h = FileCreate(filePath);
 
         if (!h)
@@ -390,6 +411,8 @@ void __fastcall TFormPatch::SaveSyxFile(String filePath, TStringList *sl)
 
         if (buf)
             delete [] buf;
+
+        FormMain->SystemBusy = false;
     }
 }
 //---------------------------------------------------------------------------
@@ -487,12 +510,7 @@ void __fastcall TFormPatch::SetRandomization(bool flag)
         MenuItemFormPatchStartStopRandom->Checked = false;
         LabelRand->Caption = "Randomization: Off";
 
-        // Restore original
-        if (!WriteToGrid(origGridVals, false))
-            return;
-
-        // Write data-grid to D-50 Temp-area
-        PutTempArea();
+        Restore();
     }
     m_randomizationOn = flag;
 }
