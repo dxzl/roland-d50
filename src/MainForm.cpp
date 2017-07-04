@@ -78,7 +78,7 @@
 
 #include "RegHelper.h"
 #include "PatchForm.h"
-#include "ChangePatchForm.h"
+#include "SelectPatch.h"
 #include <stdio.h>
 #include <math.h>
 //---------------------------------------------------------------------------
@@ -275,9 +275,14 @@ void __fastcall TFormMain::FormKeyDown(TObject *Sender, WORD &Key, TShiftState S
         DeleteSelectedFile();
 }
 //---------------------------------------------------------------------------
-void __fastcall TFormMain::SaveAll64PatchesinPatchSave1Click(TObject *Sender)
+void __fastcall TFormMain::Save64IntPatchesClick(TObject *Sender)
 {
-    FormPatch->ReadAllD50PatchesAndSaveTo64Files();
+    FormPatch->ReadPatchesAndSaveTo64Files(false);
+}
+//---------------------------------------------------------------------------
+void __fastcall TFormMain::Save64CrdPatchesClick(TObject *Sender)
+{
+    FormPatch->ReadPatchesAndSaveTo64Files(true);
 }
 //---------------------------------------------------------------------------
 void __fastcall TFormMain::MenuViewPatchGridClick(TObject *Sender)
@@ -324,8 +329,7 @@ void __fastcall TFormMain::TimerDemoTimeout(TObject *Sender)
                      "\r\n(Click \"Menu->Get temp area\" to retry!)\r\n");
     else
     {
-        PatchChange(); // set the patch # we store in the registry
-        FormPatch->GetTempArea(); // load D-50 temp-area into data grid and save original values
+        MenuSetBasePatchClick(NULL);
         Memo1->Clear();
     }
 }
@@ -415,9 +419,53 @@ void __fastcall TFormMain::FileListBox1DblClick(TObject *Sender)
     FormPatch->LoadPatchFileIntoD50AndDataGrid(FileListBox1->FileName);
 }
 //---------------------------------------------------------------------------
+void __fastcall TFormMain::MenuSetBasePatchClick(TObject *Sender)
+{
+    LoadPatchFromD50(true); // allow memory card
+}
+//---------------------------------------------------------------------------
+void __fastcall TFormMain::LoadPatchFromD50(bool bAllowCard)
+{
+  // Send Patch Change control-message to the D-50
+  Application->CreateForm(__classid(TFormSelectPatch), &FormSelectPatch);
+  FormSelectPatch->AllowCard = bAllowCard;
+  FormSelectPatch->Patch = g_currentPatch;
+  int patch = -1;
+  if (FormSelectPatch->ShowModal() == mrOk)
+    patch = FormSelectPatch->Patch;
+  FormSelectPatch->Release();
+
+  if (patch >= 0)
+  {
+    PatchChange(patch);
+    FormPatch->GetTempArea(patch); // load D-50 temp-area into data grid and save original values
+    Memo1->Clear();
+  }
+}
+//---------------------------------------------------------------------------
+void __fastcall TFormMain::RetargetPatch(void)
+{
+  // Send Patch Change control-message to the D-50
+  Application->CreateForm(__classid(TFormSelectPatch), &FormSelectPatch);
+  FormSelectPatch->AllowCard = false; // don't allow card
+  FormSelectPatch->Patch = g_currentPatch;
+  int patch = -1;
+  if (FormSelectPatch->ShowModal() == mrOk)
+    patch = FormSelectPatch->Patch;
+  FormSelectPatch->Release();
+
+  if (patch >= 0)
+  {
+    PatchChange(patch); // change patch on the D-50
+    FormPatch->PatchChange(patch); // change patch in the grid
+    FormPatch->PutTempArea(); // write grid to D-50 temp-area
+    Memo1->Clear();
+  }
+}
+//---------------------------------------------------------------------------
 void __fastcall TFormMain::MenuGetTempAreaClick(TObject *Sender)
 {
-    FormPatch->GetTempArea(); // load D-50 temp-area into data grid and save original values
+    FormPatch->GetTempArea(g_currentPatch); // load D-50 temp-area into data grid and save original values
     Memo1->Clear();
 }
 //---------------------------------------------------------------------------
@@ -605,7 +653,7 @@ void __fastcall TFormMain::Edit1KeyDown(TObject *Sender, WORD &Key, TShiftState 
     if (Key == VK_RETURN)
     {
       int idx = FileListBox1->ItemIndex;
-      int count = FileListBox1->Count;
+      int count = FileListBox1->SelCount;
 
       if (count != 1 || idx < 0 || idx >= count)
           return;
@@ -1830,23 +1878,6 @@ void __fastcall TFormMain::Help1Click(TObject *Sender)
 "To send a patch to your D-50, double-click it or right-click and choose Play from the pop-up menu.\n";
 
   ShowMessage(sHelp);
-}
-//---------------------------------------------------------------------------
-void __fastcall TFormMain::MenuRemotelyChangePatchClick(TObject *Sender)
-{
-  // Send Patch Change control-message to the D-50
-  Application->CreateForm(__classid(TFormChangePatch), &FormChangePatch);
-  FormChangePatch->Patch = g_currentPatch;
-  int patch = -1;
-  if (FormChangePatch->ShowModal() == mrOk)
-    patch = FormChangePatch->Patch;
-  FormChangePatch->Release();
-
-  if (patch >= 0)
-  {
-    PatchChange(patch);
-    TimerDemoTimeout(NULL); // fetch the temp-area data
-  }
 }
 //---------------------------------------------------------------------------
 

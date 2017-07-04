@@ -160,7 +160,7 @@ __published:    // IDE-managed Components
     TMenuItem *MenuItemFormPatchStartStopRandom;
     TMenuItem *MenuItemFormPatchSendToTempArea;
     TMenuItem *MenuItemFormPatchAllNotesOff;
-    TTimer *TimerOver2Sec;
+  TTimer *TimerOver10Percent;
     TMenuItem *MenuItemFormPatchPlay;
     TMenuItem *MenuFormPatchPresets;
     TMenuItem *MenuPresetsItemPreset11;
@@ -197,6 +197,8 @@ __published:    // IDE-managed Components
   TStringGrid *PatchSG;
   TButton *ButtonRandInterval;
   TLabel *LabelRand;
+  TMenuItem *MenuItemFormPatchReload;
+  TMenuItem *MenuItemFormPatchChange;
     void __fastcall FormCreate(TObject *Sender);
     void __fastcall SGDblClick(TObject *Sender);
     void __fastcall MenuItemFormPatchWriteToFileClick(TObject *Sender);
@@ -207,7 +209,7 @@ __published:    // IDE-managed Components
     void __fastcall MenuItemFormPatchSendToTempAreaClick(TObject *Sender);
     void __fastcall FormClose(TObject *Sender, TCloseAction &Action);
     void __fastcall MenuItemFormPatchAllNotesOffClick(TObject *Sender);
-    void __fastcall TimerOver2SecTimer(TObject *Sender);
+    void __fastcall TimerOver10PercentTimer(TObject *Sender);
     void __fastcall MenuItemFormPatchPlayClick(TObject *Sender);
     void __fastcall FormDestroy(TObject *Sender);
     void __fastcall MenuPresetsItemClick(TObject *Sender);
@@ -216,6 +218,8 @@ __published:    // IDE-managed Components
   void __fastcall MenuItemFormPatchManualRandomizeClick(TObject *Sender);
   void __fastcall MenuHelpClick(TObject *Sender);
   void __fastcall ButtonRandIntervalClick(TObject *Sender);
+  void __fastcall MenuItemFormPatchLoadClick(TObject *Sender);
+  void __fastcall MenuItemFormPatchChangeClick(TObject *Sender);
 private:    // User declarations
     void __fastcall Restore(void);
     void __fastcall SetRandomization(bool flag);
@@ -230,7 +234,8 @@ private:    // User declarations
     bool __fastcall WriteToGrid(int tabIndex, String sColVals, int column=1);
     void __fastcall SaveSyxFile(String filePath, TStringList *sl);
 
-    void __fastcall SetCaptionToPatchTabCellValues(void);
+    void __fastcall SetCaptionAndPatchNumberToTabCellValues(bool bAppendPatchNumber);
+    String __fastcall GetFriendlyPatchNum(int patch);
 
     bool __fastcall GenRandValues(void);
     bool __fastcall GenRandValues(unsigned __int64 masks[]);
@@ -239,7 +244,8 @@ private:    // User declarations
     void __fastcall InitDataGrid(int tabIndex);
 
     bool m_enableCellEdit, m_EventsEnabled, m_randomizationOn;
-    int m_currentTimer;
+    unsigned m_currentTimer;
+    int m_patchNumber;
     String m_patchName;
     TStringList *prevGridVals;
     TStringList *origGridVals;
@@ -254,10 +260,11 @@ public:     // User declarations
     void __fastcall ManualRandomize(unsigned __int64 masks[]);
     void __fastcall SetRandFlags(int tabIndex, unsigned __int64 mask, bool bOnOff);
     void __fastcall LoadPatchFileIntoD50AndDataGrid(String sPath);
-    void __fastcall GetTempArea(void);
+    void __fastcall GetTempArea(int patchNum);
     void __fastcall PutTempArea(void);
     void __fastcall WritePatchToFile(bool bSyx);
-    void __fastcall ReadAllD50PatchesAndSaveTo64Files(void);
+    void __fastcall ReadPatchesAndSaveTo64Files(bool bCard);
+    void __fastcall PatchChange(int newPatch);
 };
 //---------------------------------------------------------------------------
 extern PACKAGE TFormPatch *FormPatch;

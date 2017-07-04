@@ -24,7 +24,7 @@
 // defines
 //---------------------------------------------------------------------------
 // Note: Use String() to wrap this for the overloaded RegHelper write method!
-#define VERSION_STR "Version 1.45: July 2, 2017"
+#define VERSION_STR "Version 1.46: July 4, 2017"
 //---------------------------------------------------------------------------
 
 #define REGISTRY_KEY "\\Software\\Discrete-Time Systems\\RolandD50"
@@ -175,11 +175,13 @@ __published:  // IDE-managed Components
     TMenuItem *MenuOpenFile;
     TMenuItem *N1;
     TMenuItem *MenuViewPatchGrid;
-    TMenuItem *SaveAll64PatchesinPatchSave1;
+  TMenuItem *Save64IntPatches;
     TMenuItem *N2;
     TMenuItem *MenuItemSetWorkingDirectoryPath;
   TMenuItem *Help1;
-  TMenuItem *MenuRemotelyChangePatch;
+  TMenuItem *MenuLoadPatchFromD50;
+  TMenuItem *Save64CrdPatches;
+  TMenuItem *N3;
 
     void __fastcall MenuGetTempAreaClick(TObject *Sender);
     void __fastcall MenuPutTempAreaClick(TObject *Sender);
@@ -199,11 +201,12 @@ __published:  // IDE-managed Components
     void __fastcall FileListBox1DblClick(TObject *Sender);
     void __fastcall MenuOpenFileClick(TObject *Sender);
     void __fastcall MenuViewPatchGridClick(TObject *Sender);
-    void __fastcall SaveAll64PatchesinPatchSave1Click(TObject *Sender);
+    void __fastcall Save64IntPatchesClick(TObject *Sender);
     void __fastcall MenuItemSetWorkingDirectoryPathClick(TObject *Sender);
   void __fastcall Help1Click(TObject *Sender);
-  void __fastcall MenuRemotelyChangePatchClick(TObject *Sender);
+  void __fastcall MenuSetBasePatchClick(TObject *Sender);
   void __fastcall Edit1KeyDown(TObject *Sender, WORD &Key, TShiftState Shift);
+  void __fastcall Save64CrdPatchesClick(TObject *Sender);
 
 private:  // User declarations
     void __fastcall TimerGpTimeout(TObject *Sender);
@@ -260,6 +263,8 @@ END_MESSAGE_MAP(TComponent)
 public:    // User declarations
     __fastcall TFormMain(TComponent* Owner);
 
+    void __fastcall RetargetPatch(void);
+    void __fastcall LoadPatchFromD50(bool bAllowCard);
     void __fastcall SetWorkingDir(String sDir);
     void __fastcall printm(String message);
     void __fastcall NotesAndControllersOff(void);

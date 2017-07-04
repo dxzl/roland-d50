@@ -6,10 +6,10 @@
 //---------------------------------------------------------------------------
 #include <Vcl.Styles.hpp>
 #include <Vcl.Themes.hpp>
-USEFORM("SetRandForm.cpp", FormSetRand);
 USEFORM("PatchForm.cpp", FormPatch);
+USEFORM("SelectPatch.cpp", FormSelectPatch);
+USEFORM("SetRandForm.cpp", FormSetRand);
 USEFORM("MainForm.cpp", FormMain);
-USEFORM("ChangePatchForm.cpp", FormChangePatch);
 //---------------------------------------------------------------------------
 int WINAPI _tWinMain(HINSTANCE, HINSTANCE, LPTSTR, int)
 {

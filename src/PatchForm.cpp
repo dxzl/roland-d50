@@ -21,9 +21,10 @@ void __fastcall TFormPatch::FormCreate(TObject *Sender)
     prevGridVals = new TStringList;
     origGridVals = new TStringList;
 
+    m_patchNumber = 0;
     m_enableCellEdit = false;
     m_randomizationOn = false;
-    TimerOver2Sec->Enabled = false;
+    TimerOver10Percent->Enabled = false;
     TimerSendPatch->Enabled = false;
 
     InitDataGrid();
@@ -170,18 +171,26 @@ void __fastcall TFormPatch::TimerSendPatchTimer(TObject *Sender)
 
     MenuItemFormPatchPlayClick(NULL); // play it!
 
-    TimerOver2Sec->Enabled = false;
-    TimerOver2Sec->Interval = 2000;
-    TimerOver2Sec->Enabled = true; // will tell us when over 2-sec into playback
+    TimerOver10Percent->Enabled = false;
+
+    double tenPercent = 10.*FormMain->RandInterval/100.;
+    if (tenPercent >= 100.)
+    {
+        // over 100 ms
+        TimerOver10Percent->Interval = (int)tenPercent;
+        TimerOver10Percent->Enabled = true; // will tell us when over 10% of the random interval into playback
+    }
+    else
+        TimerOver10Percent->Enabled = false; // don't use
 }
 //---------------------------------------------------------------------------
-// This 2-second timer is started when TimerSendPatchTimer triggers a new
+// This 10% timer is started when TimerSendPatch triggers a new
 // random set of patch values to be put in the grid and sent to the D-50.
-// Then if the user presses the spacebar to save the patch as a file,
-// we can tell if they are actually trying to save the previous values...
-void __fastcall TFormPatch::TimerOver2SecTimer(TObject *Sender)
+// Then if the user presses F7 to save the patch as a file,
+// we can guess that they may actually be trying to save the previous values...
+void __fastcall TFormPatch::TimerOver10PercentTimer(TObject *Sender)
 {
-    TimerOver2Sec->Enabled = false;
+    TimerOver10Percent->Enabled = false;
 }
 //---------------------------------------------------------------------------
 void __fastcall TFormPatch::MenuItemFormPatchSendToTempAreaClick(TObject *Sender)
@@ -235,7 +244,7 @@ void __fastcall TFormPatch::WritePatchToFile(bool bSyx)
     // to save the sound he was hearing, we want to instead save the previously
     // backed-up string-list...
     bool bSaveOldValues = m_randomizationOn && TimerSendPatch->Enabled &&
-                              TimerOver2Sec->Enabled && prevGridVals->Count;
+                              TimerOver10Percent->Enabled && prevGridVals->Count;
 
     // save as file
     String filePath;
@@ -419,7 +428,7 @@ void __fastcall TFormPatch::SaveSyxFile(String filePath, TStringList *sl)
 // This reads all 64 patches stored on the Roland D-50 Synth and saves them
 // to 64 individual patch-files in subdirectory "PatchSave"
 // he's hearing...
-void __fastcall TFormPatch::ReadAllD50PatchesAndSaveTo64Files(void)
+void __fastcall TFormPatch::ReadPatchesAndSaveTo64Files(bool bCard)
 {
     // append all the data-grids
     TStringList *allGrids = NULL;
@@ -428,19 +437,31 @@ void __fastcall TFormPatch::ReadAllD50PatchesAndSaveTo64Files(void)
     {
         allGrids = new TStringList();
 
-        String fileDir = FormMain->DocPath + "\\PatchSave\\";
+        String fileDir = FormMain->DocPath;
+
+        int pos = fileDir.LowerCase().Pos("\\patchsave\\");
+
+        if (pos == 0)
+            fileDir += "\\PatchSave\\";
+
         if (!DirectoryExists(fileDir))
             CreateDir(fileDir);
 
+        // Note: to xfer mmemory-card patches, on D-50 press Data Transfer
+        // Crd->Int
         for(int patchNum = 0; patchNum < TOTAL_PATCHES_ON_D50; patchNum++)
         {
+            if (bCard)
+                patchNum += 64;
+
             FormMain->PatchChange(patchNum);
-            GetTempArea();
+            GetTempArea(patchNum);
 
             // save as file
             String filePath;
 
             String sNew;
+            // m_patchName is trimmed and set in SetCaptionAndPatchNumberToTabCellValues()
             for (int ii = 1; ii <= m_patchName.Length(); ii++)
             {
                 Char c = m_patchName[ii];
@@ -484,7 +505,7 @@ void __fastcall TFormPatch::MenuItemFormPatchStartStopRandomClick(TObject *Sende
 //---------------------------------------------------------------------------
 void __fastcall TFormPatch::SetRandomization(bool flag)
 {
-    TimerOver2Sec->Enabled = false;
+    TimerOver10Percent->Enabled = false;
     TimerSendPatch->Enabled = false;
     FormMain->PatchChange(); // silence playing sounds
 
@@ -751,7 +772,10 @@ void __fastcall TFormPatch::InitDataGrid(void)
     for (int ii = 1; ii <= D50_PATCH_NAME_LENGTH; ii++)
         sg->Cells[rVal][ii] = (char)bPatch[ii-1];
 
-    SetCaptionToPatchTabCellValues();
+    // we use a spare grid slot to store the patch #
+    PatchSG->Cells[rVal][D50_PATCH_SECTION_SIZE] = "-1"; // "not set"
+
+    SetCaptionAndPatchNumberToTabCellValues(false);
 }
 //---------------------------------------------------------------------------
 void __fastcall TFormPatch::InitDataGrid(int tabIndex)
@@ -1000,9 +1024,16 @@ bool __fastcall TFormPatch::WriteToGrid(int tabIndex, Byte *data, int column)
     }
 }
 //---------------------------------------------------------------------------
+// write a new patch number into PatchSG row 64 and change the caption
+void __fastcall TFormPatch::PatchChange(int newPatch)
+{
+    PatchSG->Cells[rVal][D50_PATCH_SECTION_SIZE] = String(newPatch);
+    SetCaptionAndPatchNumberToTabCellValues(true);
+}
+//---------------------------------------------------------------------------
 // the Patch tab has the D50_COMMON_NAME_LENGTH name of the patch in
 // cell-offsets 1-18
-void __fastcall TFormPatch::SetCaptionToPatchTabCellValues(void)
+void __fastcall TFormPatch::SetCaptionAndPatchNumberToTabCellValues(bool bAppendPatchNumber)
 {
     TStringGrid *sg = GetSgPtr(6);
 
@@ -1021,9 +1052,52 @@ void __fastcall TFormPatch::SetCaptionToPatchTabCellValues(void)
         }
 
         // set out form's caption to the name of the patch
-        if (m_patchName.Length())
-            this->Caption = m_patchName;
+        String patchName = m_patchName.Trim();
+
+        // we use the last spare slot in the patch grid to store the 0-127 base patch number
+        m_patchNumber = StrToIntDef(PatchSG->Cells[rVal][D50_PATCH_SECTION_SIZE], -1);
+
+        if (patchName.Length())
+        {
+            if (bAppendPatchNumber && m_patchNumber >= 0)
+            {
+                patchName = GetFriendlyPatchNum(m_patchNumber) + " " + patchName;
+            }
+            this->Caption = patchName;
+        }
     }
+}
+//---------------------------------------------------------------------------
+String __fastcall TFormPatch::GetFriendlyPatchNum(int patch)
+{
+    if (patch < 0)
+        return "";
+
+    String sType;
+
+    if (patch >= TOTAL_PATCHES_ON_D50)
+    {
+        sType = "C";
+        patch -= TOTAL_PATCHES_ON_D50;
+    }
+    else
+        sType = "I";
+
+    // Convert to patch bank and patch number
+    int bank;
+    if (patch == 0)
+        bank = 0;
+    else
+        bank = patch/8;
+    bank++;
+
+    int num;
+    if (patch == 0)
+        num = 0;
+    else
+        num = patch%8;
+    num++;
+    return sType + String(bank*10 + num);
 }
 //---------------------------------------------------------------------------
 TStringGrid * __fastcall TFormPatch::GetSgPtr(int tabIndex)
@@ -1080,7 +1154,7 @@ void __fastcall TFormPatch::PutTempArea(void)
     }
 }
 //---------------------------------------------------------------------------
-void __fastcall TFormPatch::GetTempArea(void)
+void __fastcall TFormPatch::GetTempArea(int patchNum)
 {
     if (FormMain->SystemBusy)
         return;
@@ -1107,8 +1181,17 @@ void __fastcall TFormPatch::GetTempArea(void)
                 return;
         }
 
+        // Ideally, the D-50 could tell us what patch it's set to, but it can't,
+        // I-11 is not sent... so we don't know our "base patch" unless we
+        // set the patch ourselves (Menu->Change Base Patch)... we then really
+        // have no place to store it that will be embedded in a patch-file
+        // for the DataGrid unless we put it in one of the "spare" parameter
+        // slots on the D-50... so I'm using slot 64 in the Patch Tab grid...
+        PatchSG->Cells[rVal][D50_PATCH_SECTION_SIZE] = String(patchNum);
+
         // set the caption to the first D50_PATCH_NAME_LENGTH chars in patch-tab column 1
-        SetCaptionToPatchTabCellValues();
+        // (sets m_patchName and m_patchNumber from grid)
+        SetCaptionAndPatchNumberToTabCellValues(true);
 
         ReadFromGrid(origGridVals); // save original vals
 
@@ -1231,12 +1314,16 @@ void __fastcall TFormPatch::LoadPatchFileIntoD50AndDataGrid(String sPath)
         ShowMessage("Unable to load file!");
     else
     {
-        // Write grid to D-50 Temp-area
-        PutTempArea();
-
         // set the caption to the first D50_PATCH_NAME_LENGTH chars in
-        // patch-tab column 1
-        SetCaptionToPatchTabCellValues();
+        // patch-tab column 1 and prefix with I11, C88, Etc from
+        // spare parameter 64 in the patch tab, patch index.
+        SetCaptionAndPatchNumberToTabCellValues(true);
+
+        // send midi patch-change and set g_currentPatch in the main form
+        FormMain->PatchChange(m_patchNumber);
+
+        // Write grid to D-50 Temp-area for that patch
+        PutTempArea();
 
         ReadFromGrid(origGridVals); // save original vals
 
@@ -1384,6 +1471,23 @@ void __fastcall TFormPatch::ButtonRandIntervalClick(TObject *Sender)
     }
   }
   Application->ProcessMessages();
+}
+//---------------------------------------------------------------------------
+void __fastcall TFormPatch::MenuItemFormPatchLoadClick(TObject *Sender)
+{
+    FormMain->LoadPatchFromD50(true); // allow memory card
+}
+//---------------------------------------------------------------------------
+void __fastcall TFormPatch::MenuItemFormPatchChangeClick(TObject *Sender)
+{
+    // here, we have some patch in the grid, either from the d-50 originally
+    // or from a file and we want to re-target it to a new base patch.
+    // SetBasePatch changes the patch and loads it into the grid, but sometimes
+    // we need to change the base patch and write what we have here, say if it
+    // was loaded from a file and we are changing the original location...
+    // So should we have two functions? "Load new base patch" and "Retarget to new patch number"
+//    FormMain->SelectPatch();
+    FormMain->RetargetPatch();
 }
 //---------------------------------------------------------------------------
 

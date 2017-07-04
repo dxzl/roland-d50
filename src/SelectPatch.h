@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------
 
-#ifndef ChangePatchFormH
-#define ChangePatchFormH
+#ifndef SelectPatchH
+#define SelectPatchH
 //---------------------------------------------------------------------------
 #include <System.Classes.hpp>
 #include <Vcl.Controls.hpp>
@@ -9,7 +9,7 @@
 #include <Vcl.Forms.hpp>
 #include <Vcl.ExtCtrls.hpp>
 //---------------------------------------------------------------------------
-class TFormChangePatch : public TForm
+class TFormSelectPatch : public TForm
 {
 __published:	// IDE-managed Components
   TPanel *Panel1;
@@ -21,12 +21,14 @@ __published:	// IDE-managed Components
   void __fastcall FormShow(TObject *Sender);
 private:	// User declarations
   int FPatch;
+  bool FAllowCard;
 public:		// User declarations
-  __fastcall TFormChangePatch(TComponent* Owner);
+  __fastcall TFormSelectPatch(TComponent* Owner);
 
   __property int Patch = {read = FPatch, write = FPatch};
+  __property bool AllowCard = {read = FAllowCard, write = FAllowCard};
 };
 //---------------------------------------------------------------------------
-extern PACKAGE TFormChangePatch *FormChangePatch;
+extern PACKAGE TFormSelectPatch *FormSelectPatch;
 //---------------------------------------------------------------------------
 #endif

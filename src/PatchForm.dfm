@@ -2,7 +2,7 @@ object FormPatch: TFormPatch
   Left = 0
   Top = 0
   Caption = 'Roland D-50 Temporary Area'
-  ClientHeight = 339
+  ClientHeight = 259
   ClientWidth = 739
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -60,21 +60,17 @@ object FormPatch: TFormPatch
     Left = 0
     Top = 0
     Width = 739
-    Height = 339
+    Height = 259
     ActivePage = UpperPartial1
     Align = alClient
     TabOrder = 0
     object UpperPartial1: TTabSheet
       Caption = 'Upper Partial 1'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object UpperPartial1SG: TStringGrid
         Left = 0
         Top = 0
         Width = 731
-        Height = 287
+        Height = 207
         Align = alClient
         ColCount = 4
         DefaultColWidth = 175
@@ -157,7 +153,7 @@ object FormPatch: TFormPatch
       end
       object Panel1: TPanel
         Left = 0
-        Top = 287
+        Top = 207
         Width = 731
         Height = 24
         Align = alBottom
@@ -193,7 +189,7 @@ object FormPatch: TFormPatch
         Left = 0
         Top = 0
         Width = 731
-        Height = 331
+        Height = 251
         Align = alClient
         ColCount = 4
         DefaultColWidth = 175
@@ -286,7 +282,7 @@ object FormPatch: TFormPatch
         Left = 0
         Top = 0
         Width = 731
-        Height = 331
+        Height = 251
         Align = alClient
         ColCount = 4
         DefaultColWidth = 175
@@ -379,7 +375,7 @@ object FormPatch: TFormPatch
         Left = 0
         Top = 0
         Width = 731
-        Height = 331
+        Height = 251
         Align = alClient
         ColCount = 4
         DefaultColWidth = 175
@@ -472,7 +468,7 @@ object FormPatch: TFormPatch
         Left = 0
         Top = 0
         Width = 731
-        Height = 331
+        Height = 251
         Align = alClient
         ColCount = 4
         DefaultColWidth = 175
@@ -565,7 +561,7 @@ object FormPatch: TFormPatch
         Left = 0
         Top = 0
         Width = 731
-        Height = 331
+        Height = 251
         Align = alClient
         ColCount = 4
         DefaultColWidth = 175
@@ -658,7 +654,7 @@ object FormPatch: TFormPatch
         Left = 0
         Top = 0
         Width = 731
-        Height = 331
+        Height = 251
         Align = alClient
         ColCount = 4
         DefaultColWidth = 175
@@ -747,13 +743,26 @@ object FormPatch: TFormPatch
     object MenuFormPatchMenu: TMenuItem
       Caption = '&Menu'
       ShortCut = 119
+      object MenuItemFormPatchReload: TMenuItem
+        Caption = '&Load patch from Roland D-50'
+        ShortCut = 114
+        OnClick = MenuItemFormPatchLoadClick
+      end
+      object MenuItemFormPatchChange: TMenuItem
+        Caption = '&Change patch number'
+        ShortCut = 115
+        OnClick = MenuItemFormPatchChangeClick
+      end
+      object N6: TMenuItem
+        Caption = '-'
+      end
       object MenuItemFormPatchStartStopRandom: TMenuItem
         Caption = '&Randomization (start/stop)'
         ShortCut = 116
         OnClick = MenuItemFormPatchStartStopRandomClick
       end
       object MenuItemFormPatchManualRandomize: TMenuItem
-        Caption = '&Manual Randomize (one-shot)'
+        Caption = '&Manual randomize (one-shot)'
         ShortCut = 117
         OnClick = MenuItemFormPatchManualRandomizeClick
       end
@@ -761,19 +770,19 @@ object FormPatch: TFormPatch
         Caption = '-'
       end
       object MenuItemFormPatchWriteToFile: TMenuItem
-        Caption = '&Save .d50 patch file'
+        Caption = '&Save as .d50 patch file'
         ShortCut = 118
         OnClick = MenuItemFormPatchWriteToFileClick
       end
       object Exportpatchtosyxbinaryfile1: TMenuItem
-        Caption = '&Write .syx binary patch file'
+        Caption = '&Export as .syx binary patch file'
         OnClick = Exportpatchtosyxbinaryfile1Click
       end
       object N3: TMenuItem
         Caption = '-'
       end
       object MenuItemFormPatchAllNotesOff: TMenuItem
-        Caption = '&All Notes Off'
+        Caption = '&All notes off'
         ShortCut = 119
         OnClick = MenuItemFormPatchAllNotesOffClick
       end
@@ -781,7 +790,7 @@ object FormPatch: TFormPatch
         Caption = '-'
       end
       object MenuItemFormPatchPlay: TMenuItem
-        Caption = '&Play Patch'
+        Caption = '&Play patch'
         ShortCut = 120
         OnClick = MenuItemFormPatchPlayClick
       end
@@ -789,17 +798,14 @@ object FormPatch: TFormPatch
         Caption = '-'
       end
       object MenuItemFormPatchSendToTempArea: TMenuItem
-        Caption = '&Send to d-50 temp area'
+        Caption = '&Update d-50 temp area'
         ShortCut = 121
         OnClick = MenuItemFormPatchSendToTempAreaClick
       end
       object MenuItemFormPatchEnforceMinMaxValue: TMenuItem
-        Caption = '&Enforce min/max values'
+        Caption = '&Limit to min/max values'
         ShortCut = 122
         OnClick = MenuItemFormPatchEnforceMinMaxValueClick
-      end
-      object N6: TMenuItem
-        Caption = '-'
       end
     end
     object MenuFormPatchPresets: TMenuItem
@@ -853,10 +859,10 @@ object FormPatch: TFormPatch
     Left = 340
     Top = 152
   end
-  object TimerOver2Sec: TTimer
+  object TimerOver10Percent: TTimer
     Enabled = False
     Interval = 2000
-    OnTimer = TimerOver2SecTimer
+    OnTimer = TimerOver10PercentTimer
     Left = 236
     Top = 152
   end

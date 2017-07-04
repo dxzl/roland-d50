@@ -1,9 +1,9 @@
-object FormChangePatch: TFormChangePatch
+object FormSelectPatch: TFormSelectPatch
   Left = 0
   Top = 0
   ActiveControl = ComboBox1
   BorderStyle = bsDialog
-  Caption = 'Remotely Change Patch'
+  Caption = 'Select Patch'
   ClientHeight = 176
   ClientWidth = 189
   Color = clBtnFace
