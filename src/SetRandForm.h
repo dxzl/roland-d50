@@ -125,11 +125,14 @@ private:	// User declarations
     UINT64 m_checkPartialMasks[14+1];
 
     TStringList *slSavedState, *slUndoState;
+    TFormPatch* g_formPatch;
 
 public:		// User declarations
     __fastcall TFormSetRand(TComponent* Owner);
+
+
+    __property TFormPatch* FormPatch = {read = g_formPatch};
 };
 //---------------------------------------------------------------------------
-extern PACKAGE TFormSetRand *FormSetRand;
 //---------------------------------------------------------------------------
 #endif

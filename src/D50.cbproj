@@ -6,7 +6,7 @@
         <AppType>Application</AppType>
         <MainSource>D50.cpp</MainSource>
         <Base>True</Base>
-        <Config Condition="'$(Config)'==''">Release</Config>
+        <Config Condition="'$(Config)'==''">Debug</Config>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <TargetedPlatforms>1</TargetedPlatforms>
     </PropertyGroup>
@@ -97,11 +97,11 @@
     <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
         <UsePackages>false</UsePackages>
         <DynamicRTL>false</DynamicRTL>
-        <VerInfo_MinorVer>45</VerInfo_MinorVer>
+        <VerInfo_MinorVer>47</VerInfo_MinorVer>
         <VerInfo_PreRelease>true</VerInfo_PreRelease>
         <VerInfo_Debug>true</VerInfo_Debug>
         <VerInfo_Private>true</VerInfo_Private>
-        <VerInfo_Keys>CompanyName=Discrete-Time Systems;FileDescription=$(MSBuildProjectName);FileVersion=1.45.0.0;InternalName=;LegalCopyright=2017;LegalTrademarks=;OriginalFilename=D50.exe;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.45.0.0;Comments=Author: Scott Swift;PrivateBuild=</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=Discrete-Time Systems;FileDescription=$(MSBuildProjectName);FileVersion=1.47.0.0;InternalName=;LegalCopyright=2017;LegalTrademarks=;OriginalFilename=D50.exe;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.46.0.0;Comments=Author: Scott Swift;PrivateBuild=</VerInfo_Keys>
         <Icon_MainIcon>Colorize.ico</Icon_MainIcon>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Locale>1033</VerInfo_Locale>
@@ -117,21 +117,15 @@
         <AppEnableRuntimeThemes>true</AppEnableRuntimeThemes>
         <AppEnableHighDPI>true</AppEnableHighDPI>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-        <VerInfo_MinorVer>45</VerInfo_MinorVer>
+        <VerInfo_MinorVer>47</VerInfo_MinorVer>
         <VerInfo_Locale>1033</VerInfo_Locale>
-        <VerInfo_Keys>CompanyName=Discrete-Time Systems;FileDescription=$(MSBuildProjectName);FileVersion=1.45.0.0;InternalName=;LegalCopyright=2017;LegalTrademarks=;OriginalFilename=D50.exe;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.45.0.0;Comments=Author: Scott Swift</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=Discrete-Time Systems;FileDescription=$(MSBuildProjectName);FileVersion=1.47.0.0;InternalName=;LegalCopyright=2017;LegalTrademarks=;OriginalFilename=D50.exe;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.47.0.0;Comments=Author: Scott Swift</VerInfo_Keys>
         <DynamicRTL>false</DynamicRTL>
         <UsePackages>false</UsePackages>
         <Icon_MainIcon>Colorize.ico</Icon_MainIcon>
         <LinkPackageStatics>rtl.lib;vcl.lib;AsyncProCR.lib;vclx.lib</LinkPackageStatics>
     </PropertyGroup>
     <ItemGroup>
-        <CppCompile Include="ChangePatchForm.cpp">
-            <Form>FormChangePatch</Form>
-            <FormType>dfm</FormType>
-            <DependentOn>ChangePatchForm.h</DependentOn>
-            <BuildOrder>15</BuildOrder>
-        </CppCompile>
         <CppCompile Include="D50.cpp">
             <BuildOrder>0</BuildOrder>
         </CppCompile>
@@ -179,20 +173,33 @@
             <DependentOn>RegHelper.h</DependentOn>
             <BuildOrder>3</BuildOrder>
         </CppCompile>
+        <CppCompile Include="RenameForm.cpp">
+            <Form>FormRename</Form>
+            <FormType>dfm</FormType>
+            <DependentOn>RenameForm.h</DependentOn>
+            <BuildOrder>16</BuildOrder>
+        </CppCompile>
         <PCHCompile Include="S950PCH.h">
             <BuildOrder>1</BuildOrder>
             <PCH>true</PCH>
         </PCHCompile>
+        <CppCompile Include="SelectPatchForm.cpp">
+            <Form>FormSelectPatch</Form>
+            <FormType>dfm</FormType>
+            <DependentOn>SelectPatchForm.h</DependentOn>
+            <BuildOrder>15</BuildOrder>
+        </CppCompile>
         <CppCompile Include="SetRandForm.cpp">
             <Form>FormSetRand</Form>
             <FormType>dfm</FormType>
             <DependentOn>SetRandForm.h</DependentOn>
             <BuildOrder>14</BuildOrder>
         </CppCompile>
-        <FormResources Include="SetRandForm.dfm"/>
         <FormResources Include="PatchForm.dfm"/>
+        <FormResources Include="SelectPatchForm.dfm"/>
+        <FormResources Include="SetRandForm.dfm"/>
+        <FormResources Include="RenameForm.dfm"/>
         <FormResources Include="MainForm.dfm"/>
-        <FormResources Include="ChangePatchForm.dfm"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

@@ -6,6 +6,8 @@
 
 #include "PatchForm.h"
 #include "SetRandForm.h"
+#include "SelectPatchForm.h"
+#include "RenameForm.h"
 //---------------------------------------------------------------------------
 #pragma package(smart_init)
 #pragma resource "*.dfm"
@@ -20,6 +22,7 @@ void __fastcall TFormPatch::FormCreate(TObject *Sender)
 {
     prevGridVals = new TStringList;
     origGridVals = new TStringList;
+    m_pFormSetRand = new TFormSetRand(this);
 
     m_patchNumber = 0;
     m_enableCellEdit = false;
@@ -30,29 +33,32 @@ void __fastcall TFormPatch::FormCreate(TObject *Sender)
     InitDataGrid();
 
     m_currentTimer = FormMain->RandInterval;
-    LabelRand->Caption = "Randomization: Off";
 
-    FormSetRand = new TFormSetRand(this);
+    // limit-check this!
+    if (m_currentTimer < MIN_TIMER || m_currentTimer > MAX_TIMER)
+      m_currentTimer = DEF_RAND_INTERVAL;
+
+    LabelRand->Caption = "Randomization: Off";
 }
 //---------------------------------------------------------------------------
 void __fastcall TFormPatch::FormDestroy(TObject *Sender)
 {
-    if (FormSetRand)
+    if (m_pFormSetRand)
     {
-        delete FormSetRand;
-        FormSetRand = NULL;
-    }
-
-    if (prevGridVals)
-    {
-        delete prevGridVals;
-        prevGridVals = NULL;
+        delete m_pFormSetRand;
+        m_pFormSetRand = NULL;
     }
 
     if (origGridVals)
     {
         delete origGridVals;
         origGridVals = NULL;
+    }
+
+    if (prevGridVals)
+    {
+        delete prevGridVals;
+        prevGridVals = NULL;
     }
 }
 //---------------------------------------------------------------------------
@@ -63,9 +69,12 @@ void __fastcall TFormPatch::FormClose(TObject *Sender, TCloseAction &Action)
     else // if closing, put back original patch
         Restore();
 
-    if (m_currentTimer >= MIN_TIMER && m_currentTimer <= MAX_TIMER)
-      FormMain->RandInterval = m_currentTimer;
+    // set property in main to this patch's rand-interval
+    // Note: may want to do this differently since every patch will set this so
+    // the last one closed will be the interval saved in the registry...
+    FormMain->RandInterval = m_currentTimer;
 
+    FormMain->RemovePatchForm(this); // delete ourself from main list of patch-forms
 }
 //---------------------------------------------------------------------------
 void __fastcall TFormPatch::Restore(void)
@@ -84,6 +93,22 @@ void __fastcall TFormPatch::Restore(void)
     PutTempArea();
 }
 //---------------------------------------------------------------------------
+// since the D-50 only has one temp slot, but we support multiple
+// patches being designed at one time in multiple instances of TFormPatch,
+// when a particulat window is selected, we need to chose a new target
+// patch on the D-50 and re-send the new patch's data...
+void __fastcall TFormPatch::FormActivate(TObject *Sender)
+{
+// this causes mainform not to close?????????
+
+    // kick off MainForm hook that iterates through all FormPatch objects
+    // and finds the newly activated one and initiates a patch change
+    // to the new patch on the D-50 and restarts randomization if it was
+    // previously enabled. Also in the handler for this timer (in FormMain),
+    // we disable the timers on all the inactive patch forms...
+    FormMain->PatchFormActivatedTimer->Enabled = true;
+}
+//---------------------------------------------------------------------------
 void __fastcall TFormPatch::FormKeyDown(TObject *Sender, WORD &Key, TShiftState Shift)
 {
     if (FormMain->SystemBusy)
@@ -92,12 +117,25 @@ void __fastcall TFormPatch::FormKeyDown(TObject *Sender, WORD &Key, TShiftState 
     if (FormMain->IsPlaying)
         FormMain->CloseMidiOut();
 
+    if (Shift.Contains(ssCtrl))
+    {
+      int page = PageControl->ActivePageIndex;
+      if (page >=0 && page <= TOTAL_TABS)
+      {
+          if (Key == 'C')
+            ValsToClipboard(page);
+          else if (Key == 'V')
+            ClipboardToVals(page);
+      }
+      return;
+    }
+
     if (Key == VK_F5)
         MenuItemFormPatchStartStopRandomClick(NULL);
     else if (Key == VK_F6)
         ManualRandomize();
     else if (Key == VK_F7)
-        MenuItemFormPatchWriteToFileClick(NULL);
+        MenuItemFormPatchWriteFileClick(NULL);
     else if (Key == VK_F8)
         MenuItemFormPatchAllNotesOffClick(NULL);
     else if (Key == VK_F9)
@@ -147,6 +185,7 @@ void __fastcall TFormPatch::ManualRandomize(unsigned __int64 masks[])
         // transmit to the Roland D-50
         PutTempArea();
 //    }
+
     MenuItemFormPatchPlayClick(NULL); // let's see what it sounds like!
 }
 //---------------------------------------------------------------------------
@@ -169,19 +208,17 @@ void __fastcall TFormPatch::TimerSendPatchTimer(TObject *Sender)
     // transmit to the Roland D-50
     PutTempArea();
 
-    MenuItemFormPatchPlayClick(NULL); // play it!
+    MenuItemFormPatchPlayClick(NULL); // let's see what it sounds like!
 
     TimerOver10Percent->Enabled = false;
 
-    double tenPercent = 10.*FormMain->RandInterval/100.;
+    double tenPercent = 10.*m_currentTimer/100.;
     if (tenPercent >= 100.)
     {
         // over 100 ms
         TimerOver10Percent->Interval = (int)tenPercent;
         TimerOver10Percent->Enabled = true; // will tell us when over 10% of the random interval into playback
     }
-    else
-        TimerOver10Percent->Enabled = false; // don't use
 }
 //---------------------------------------------------------------------------
 // This 10% timer is started when TimerSendPatch triggers a new
@@ -193,7 +230,13 @@ void __fastcall TFormPatch::TimerOver10PercentTimer(TObject *Sender)
     TimerOver10Percent->Enabled = false;
 }
 //---------------------------------------------------------------------------
-void __fastcall TFormPatch::MenuItemFormPatchSendToTempAreaClick(TObject *Sender)
+void __fastcall TFormPatch::MenuItemFormPatchReadTempClick(TObject *Sender)
+{
+    // read from the Roland D-50
+    GetTempArea(m_patchNumber);
+}
+//---------------------------------------------------------------------------
+void __fastcall TFormPatch::MenuItemFormPatchWriteTempClick(TObject *Sender)
 {
     // transmit to the Roland D-50
     PutTempArea();
@@ -210,23 +253,23 @@ void __fastcall TFormPatch::SGDblClick(TObject *Sender)
     int row = sg->Row;
 
     // range check - we only set "flags" for column 1 rows > 0
-    if (col != rRand || row < 1 || row > D50_PATCH_SECTION_SIZE)
+    if (col != cRand || row < 1 || row > D50_PATCH_SECTION_SIZE)
         return;
 
-    if (sg->Cells[rRand][row].LowerCase() == "on")
-        sg->Cells[rRand][row] = "";
+    if (sg->Cells[cRand][row].LowerCase() == "on")
+        sg->Cells[cRand][row] = "";
     else
-        sg->Cells[rRand][row] = "On";
+        sg->Cells[cRand][row] = "On";
 }
 //---------------------------------------------------------------------------
 // called when user hits spacebar to save the randomly generated patch
 // he's hearing...
-void __fastcall TFormPatch::MenuItemFormPatchWriteToFileClick(TObject *Sender)
+void __fastcall TFormPatch::MenuItemFormPatchWriteFileClick(TObject *Sender)
 {
     WritePatchToFile(false);
 }
 //---------------------------------------------------------------------------
-void __fastcall TFormPatch::Exportpatchtosyxbinaryfile1Click(TObject *Sender)
+void __fastcall TFormPatch::MenuItemFormPatchWriteSYXFileClick(TObject *Sender)
 {
     WritePatchToFile(true);
 }
@@ -425,79 +468,6 @@ void __fastcall TFormPatch::SaveSyxFile(String filePath, TStringList *sl)
     }
 }
 //---------------------------------------------------------------------------
-// This reads all 64 patches stored on the Roland D-50 Synth and saves them
-// to 64 individual patch-files in subdirectory "PatchSave"
-// he's hearing...
-void __fastcall TFormPatch::ReadPatchesAndSaveTo64Files(bool bCard)
-{
-    // append all the data-grids
-    TStringList *allGrids = NULL;
-
-    try
-    {
-        allGrids = new TStringList();
-
-        String fileDir = FormMain->DocPath;
-
-        int pos = fileDir.LowerCase().Pos("\\patchsave\\");
-
-        if (pos == 0)
-            fileDir += "\\PatchSave\\";
-
-        if (!DirectoryExists(fileDir))
-            CreateDir(fileDir);
-
-        // Note: to xfer mmemory-card patches, on D-50 press Data Transfer
-        // Crd->Int
-        for(int patchNum = 0; patchNum < TOTAL_PATCHES_ON_D50; patchNum++)
-        {
-            if (bCard)
-                patchNum += 64;
-
-            FormMain->PatchChange(patchNum);
-            GetTempArea(patchNum);
-
-            // save as file
-            String filePath;
-
-            String sNew;
-            // m_patchName is trimmed and set in SetCaptionAndPatchNumberToTabCellValues()
-            for (int ii = 1; ii <= m_patchName.Length(); ii++)
-            {
-                Char c = m_patchName[ii];
-                if (c != ' ')
-                    sNew += c;
-            }
-
-            if (sNew.IsEmpty())
-                sNew = "blank";
-
-            int ii = 0;
-
-            do {
-                filePath = fileDir + sNew +
-                    System::Sysutils::Format("%2.2d", ARRAYOFCONST((ii++))) + ".d50";
-            }
-            while (FileExists(filePath));
-
-            // get all the tab data into a stringlist and write to patch-file
-            allGrids->Clear();
-            ReadFromGrid(allGrids);
-
-            if (allGrids->Count)
-            {
-                allGrids->SaveToFile(filePath);
-                FormMain->SetWorkingDir(fileDir);
-            }
-        }
-    }
-    __finally
-    {
-        if (allGrids)
-            delete allGrids;
-    }
-}
-//---------------------------------------------------------------------------
 void __fastcall TFormPatch::MenuItemFormPatchStartStopRandomClick(TObject *Sender)
 {
     SetRandomization(!m_randomizationOn);
@@ -505,25 +475,24 @@ void __fastcall TFormPatch::MenuItemFormPatchStartStopRandomClick(TObject *Sende
 //---------------------------------------------------------------------------
 void __fastcall TFormPatch::SetRandomization(bool flag)
 {
+//  try
+//  {
     TimerOver10Percent->Enabled = false;
-    TimerSendPatch->Enabled = false;
+
+    TimerSendPatch->Enabled = false; // disable or we can't change the interval!
+
     FormMain->PatchChange(); // silence playing sounds
-
-    if (m_currentTimer < MIN_TIMER)
-    {
-      m_currentTimer = MIN_TIMER;
-      TimerSendPatch->Enabled = false;
-    }
-
-    if (TimerSendPatch->Interval != m_currentTimer)
-      TimerSendPatch->Interval = m_currentTimer;
 
     if(flag)
     {
+        if (TimerSendPatch->Interval != m_currentTimer)
+          TimerSendPatch->Interval = m_currentTimer;
+
         MenuItemFormPatchStartStopRandom->Checked = true;
         LabelRand->Caption = "Randomization: " + FormatFloat("0.0",(float)m_currentTimer/1000.);
 
         TimerSendPatchTimer(NULL); // start randomizing immediately
+
         TimerSendPatch->Enabled = true;
     }
     else // off
@@ -531,12 +500,17 @@ void __fastcall TFormPatch::SetRandomization(bool flag)
         MenuItemFormPatchStartStopRandom->Checked = false;
         LabelRand->Caption = "Randomization: Off";
 
-        Restore();
+        Restore(); // put temp area
     }
     m_randomizationOn = flag;
+//  }
+//  catch(...)
+//  {
+//      ShowMessage("oops!");
+//  }
 }
 //---------------------------------------------------------------------------
-void __fastcall TFormPatch::MenuItemFormPatchEnforceMinMaxValueClick(TObject *Sender)
+void __fastcall TFormPatch::MenuItemFormPatchLimitToMinMaxValueClick(TObject *Sender)
 {
     int idx = PageControl->TabIndex;
     if (idx >= 0 && idx <= TOTAL_TABS)
@@ -586,11 +560,11 @@ bool __fastcall TFormPatch::GenRandValues(int tabIndex, unsigned __int64 mask)
 
             // generate a random value 0-max if "On" is in the rightmost
             // column and not an ascii name field
-            if (sg->Cells[rRand][ii+1].LowerCase() == "on")
+            if (sg->Cells[cRand][ii+1].LowerCase() == "on")
             {
-                int max = StrToIntDef(sg->Cells[rMax][ii+1], -1);
+                int max = StrToIntDef(sg->Cells[cMax][ii+1], -1);
                 if (max >= 0)
-                    sg->Cells[rVal][ii+1] = String(::Random(max+1));
+                    sg->Cells[cVal][ii+1] = String(::Random(max+1));
             }
         }
 
@@ -617,7 +591,7 @@ void __fastcall TFormPatch::EnforceDataRange(int tabIndex)
 
             for (int ii = 0; ii < D50_PATCH_SECTION_SIZE; ii++)
             {
-                String s = sg->Cells[rVal][ii+1];
+                String s = sg->Cells[cVal][ii+1];
 
                 if ((bHasCommonName && ii < D50_COMMON_NAME_LENGTH) ||
                             (bHasPatchName && ii < D50_PATCH_NAME_LENGTH))
@@ -640,19 +614,19 @@ void __fastcall TFormPatch::EnforceDataRange(int tabIndex)
                     }
 
                     if (!charOk)
-                        sg->Cells[rVal][ii+1] = String('-');
+                        sg->Cells[cVal][ii+1] = String('-');
                 }
                 else
                 {
                     // will be a number 0-127
                     int val = StrToIntDef(s, -1); // default -1 is a failure
-                    int max = StrToIntDef(sg->Cells[rMax][ii+1], -1);
+                    int max = StrToIntDef(sg->Cells[cMax][ii+1], -1);
 
                     // Constrain values to range 0-max
                     if (val < 0 || max < 0)
-                        sg->Cells[rVal][ii+1] = "0";
+                        sg->Cells[cVal][ii+1] = "0";
                     else if (val > max)
-                        sg->Cells[rVal][ii+1] = String(max);
+                        sg->Cells[cVal][ii+1] = String(max);
                 }
             }
         }
@@ -740,7 +714,7 @@ void __fastcall TFormPatch::SetRandFlags(int tabIndex, unsigned __int64 mask, bo
     {
         // set only flags for which mask-bit is 1
         if (mask & 1)
-            sg->Cells[rRand][ii+1] = bOnOff ? "On" : "";
+            sg->Cells[cRand][ii+1] = bOnOff ? "On" : "";
         mask >>= 1;
     }
 }
@@ -750,8 +724,7 @@ void __fastcall TFormPatch::InitDataGrid(void)
     origGridVals->Clear();
     prevGridVals->Clear();
 
-    // set row 0 (captions) columns 0 (parameter values) and
-    // column 1 (max parameter values)
+    // initial values for rLabel, rVal, rMax and rRand columns
     for (int ii = 0; ii < TOTAL_TABS; ii++)
         InitDataGrid(ii);
 
@@ -759,25 +732,29 @@ void __fastcall TFormPatch::InitDataGrid(void)
     TStringGrid *sg = GetSgPtr(tUC);
     Byte bUc[D50_COMMON_NAME_LENGTH] = {'S','c','0','t','t',' ',' ',' ',' ',' '};
     for (int ii = 1; ii <= D50_COMMON_NAME_LENGTH; ii++)
-        sg->Cells[rVal][ii] = (char)bUc[ii-1];
+        sg->Cells[cVal][ii] = (char)bUc[ii-1];
 
     sg = GetSgPtr(tLC);
     Byte bLc[D50_COMMON_NAME_LENGTH] = {'S','w','i','f','t',' ',' ',' ',' ',' '};
     for (int ii = 1; ii <= D50_COMMON_NAME_LENGTH; ii++)
-        sg->Cells[rVal][ii] = (char)bLc[ii-1];
+        sg->Cells[cVal][ii] = (char)bLc[ii-1];
 
     sg = GetSgPtr(tP);
     Byte bPatch[D50_PATCH_NAME_LENGTH] = {'N','e','w',' ','P','a','t','c','h',
                                         ' ',' ',' ',' ',' ',' ',' ',' ',' '};
     for (int ii = 1; ii <= D50_PATCH_NAME_LENGTH; ii++)
-        sg->Cells[rVal][ii] = (char)bPatch[ii-1];
+        sg->Cells[cVal][ii] = (char)bPatch[ii-1];
 
     // we use a spare grid slot to store the patch #
-    PatchSG->Cells[rVal][D50_PATCH_SECTION_SIZE] = "-1"; // "not set"
-
+    sg->Cells[cVal][D50_PATCH_SECTION_SIZE] = "-1"; // "not set"
+}
+//---------------------------------------------------------------------------
+void __fastcall TFormPatch::FormShow(TObject *Sender)
+{
     SetCaptionAndPatchNumberToTabCellValues(false);
 }
 //---------------------------------------------------------------------------
+// called for tabs 0-6
 void __fastcall TFormPatch::InitDataGrid(int tabIndex)
 {
     try
@@ -787,10 +764,10 @@ void __fastcall TFormPatch::InitDataGrid(int tabIndex)
         if (sg)
         {
             // col / row
-            sg->Cells[rLabel][0] = "Name";
-            sg->Cells[rVal][0] = "Value";
-            sg->Cells[rMax][0] = "Max";
-            sg->Cells[rRand][0] = "Random Mode";
+            sg->Cells[cLabel][0] = "Name";
+            sg->Cells[cVal][0] = "Value";
+            sg->Cells[cMax][0] = "Max";
+            sg->Cells[cRand][0] = "Random Mode";
 
             int mode;
             if (sg->Name == "UpperCommonSG" || sg->Name == "LowerCommonSG")
@@ -809,27 +786,31 @@ void __fastcall TFormPatch::InitDataGrid(int tabIndex)
                 {
                     s += COMMONNAMES[ii];
                     max = COMMONMAX[ii];
-                    val = max/2;
+                    val = 0;
+//                    val = max/2;
                     bRandDef = COMMONRANDDEF[ii];
                 }
                 else if (mode == 1)
                 {
                     s += PATCHNAMES[ii];
                     max = PATCHMAX[ii];
-                    val = max/2;
+                    val = 0;
+//                    val = max/2;
                     bRandDef = PATCHRANDDEF[ii];
                 }
                 else // has to be one of the 4 partials!
                 {
                     s += PARTIALNAMES[ii];
                     max = PARTIALMAX[ii];
-                    val = max/2 + ::Random(max/2);
+                    val = 0;
+//                    val = max/2 + ::Random(max/2);
                     bRandDef = PARTIALRANDDEF[ii];
                 }
-                sg->Cells[rLabel][ii+1] = s; // name of this parameter
-                sg->Cells[rVal][ii+1] =  String(val); // parameter initial value
-                sg->Cells[rMax][ii+1] = String(max); // max limit
-                sg->Cells[rRand][ii+1] = bRandDef ? "On" : ""; // randomization allowed
+                // Add 1 because row 0 is the labels...
+                sg->Cells[cLabel][ii+1] = s; // name of this parameter
+                sg->Cells[cVal][ii+1] =  String(val); // parameter initial value
+                sg->Cells[cMax][ii+1] = String(max); // max limit
+                sg->Cells[cRand][ii+1] = bRandDef ? "On" : ""; // randomization allowed
             }
         }
     }
@@ -849,6 +830,119 @@ void __fastcall TFormPatch::ReadFromGrid(TStringList *sl)
     for (int col = 1; col < TOTAL_COLS; col++)
         for (int ii = 0; ii < TOTAL_TABS; ii++)
             sl->Add(GetSgPtr(ii)->Cols[col]->CommaText);
+}
+//---------------------------------------------------------------------------
+// put a comumn from a particular tab on the clipboard
+bool __fastcall TFormPatch::ValsToClipboard(int tabIndex)
+{
+    try
+    {
+        TStringGrid *sg = GetSgPtr(tabIndex);
+
+        if (!sg)
+            return false;
+
+        // assign an ascii number to represent the type of tab,
+        // partiaL, Common, Patch or Unknown
+        Char c;
+        switch(tabIndex)
+        {
+            case 0:
+            case 1:
+            case 3:
+            case 4:
+                c = 'L';
+            break;
+
+            case 2:
+            case 5:
+                c = 'C';
+            break;
+
+            case 6:
+                c = 'P';
+            break;
+
+            default:
+                c = 'U'; // unknown
+        }
+
+        // place a code-character for the type of tab at the end
+        Clipboard()->AsText = sg->Cols[cVal]->Text + c + "\n";
+
+        return true;
+    }
+    catch(...)
+    {
+        return false;
+    }
+}
+//---------------------------------------------------------------------------
+// put a comumn from a particular tab on the clipboard
+bool __fastcall TFormPatch::ClipboardToVals(int tabIndex)
+{
+    TStringList* sl = NULL;
+
+    try
+    {
+        try
+        {
+            TStringGrid *sg = GetSgPtr(tabIndex);
+
+            if (!sg)
+                return false;
+
+            // get the code we need to permit a paste between tabs of the same kind...
+            // partiaL, Common, Patch or Unknown
+            Char c;
+            switch(tabIndex)
+            {
+                case 0:
+                case 1:
+                case 3:
+                case 4:
+                    c = 'L';
+                break;
+
+                case 2:
+                case 5:
+                    c = 'C';
+                break;
+
+                case 6:
+                    c = 'P';
+                break;
+
+                default:
+                    c = 'U'; // unknown
+            }
+
+            sl = new TStringList();
+            sl->Text = Clipboard()->AsText;
+
+            // we have the heading + 64 values + a code representing
+            // the type of the original tab
+            if (sl->Count == D50_PATCH_SECTION_SIZE+2)
+            {
+                int idx = D50_PATCH_SECTION_SIZE+2-1;
+                String sCode = sl->Strings[idx]; // special code L,C,P
+                if (sCode.Length() == 1 && sCode[1] == c)
+                {
+                    sl->Delete(idx); // remove the code-string
+                    sg->Cols[cVal]->Text = sl->Text;
+                    return true;
+                }
+            }
+        }
+        catch(...){}
+    }
+    __finally
+    {
+        if (sl)
+            delete sl;
+    }
+
+    return false;
 }
 //---------------------------------------------------------------------------
 // read the specified tab's cells into Byte[] data
@@ -882,7 +976,7 @@ bool __fastcall TFormPatch::ReadBufFromGrid(int tabIndex, Byte *data, int column
             {
                 // will be a number 0-127
                 int val = StrToIntDef(s, -1); // default -1 is a failure
-                int max = StrToIntDef(sg->Cells[rMax][ii+1], -1);
+                int max = StrToIntDef(sg->Cells[cMax][ii+1], -1);
 
                 // Constrain values to range 0-max
                 if (val < 0 || max < 0)
@@ -1025,46 +1119,40 @@ bool __fastcall TFormPatch::WriteToGrid(int tabIndex, Byte *data, int column)
 }
 //---------------------------------------------------------------------------
 // write a new patch number into PatchSG row 64 and change the caption
-void __fastcall TFormPatch::PatchChange(int newPatch)
+void __fastcall TFormPatch::PatchNumberChange(int newPatch)
 {
-    PatchSG->Cells[rVal][D50_PATCH_SECTION_SIZE] = String(newPatch);
-    SetCaptionAndPatchNumberToTabCellValues(true);
+    TStringGrid *sg = GetSgPtr(tP);
+    if (sg)
+    {
+      sg->Cells[cVal][D50_PATCH_SECTION_SIZE] = String(newPatch);
+      SetCaptionAndPatchNumberToTabCellValues(true);
+    }
 }
 //---------------------------------------------------------------------------
 // the Patch tab has the D50_COMMON_NAME_LENGTH name of the patch in
 // cell-offsets 1-18
 void __fastcall TFormPatch::SetCaptionAndPatchNumberToTabCellValues(bool bAppendPatchNumber)
 {
-    TStringGrid *sg = GetSgPtr(6);
+    m_patchName = "";
 
-    if (sg)
+    for (int ii = 1; ii <= D50_PATCH_NAME_LENGTH; ii++)
+        // get the cell's string for each of 18 rows in column 1
+        // starting at row 1 (since row 0 is the column header)
+        m_patchName += PatchSG->Cells[cVal][ii];
+
+    // set out form's caption to the name of the patch
+    m_patchName = m_patchName.Trim();
+
+    // we use the last spare slot in the patch grid to store the 0-127 base patch number
+    m_patchNumber = StrToIntDef(PatchSG->Cells[cVal][D50_PATCH_SECTION_SIZE], -1);
+
+    String sName = m_patchName;
+
+    if (m_patchNumber)
     {
-        m_patchName = "";
-
-        for (int ii = 1; ii <= D50_PATCH_NAME_LENGTH; ii++)
-        {
-            // get the cell's string for each of 18 rows in column 1
-            // starting at row 1 (since row 0 is the column header)
-            String s = sg->Cells[rVal][ii];
-
-            if (s.Length() == 1) // just 1 char in each cell...
-                m_patchName += s[1]; // add the char to name
-        }
-
-        // set out form's caption to the name of the patch
-        String patchName = m_patchName.Trim();
-
-        // we use the last spare slot in the patch grid to store the 0-127 base patch number
-        m_patchNumber = StrToIntDef(PatchSG->Cells[rVal][D50_PATCH_SECTION_SIZE], -1);
-
-        if (patchName.Length())
-        {
-            if (bAppendPatchNumber && m_patchNumber >= 0)
-            {
-                patchName = GetFriendlyPatchNum(m_patchNumber) + " " + patchName;
-            }
-            this->Caption = patchName;
-        }
+        if (bAppendPatchNumber && m_patchNumber >= 0)
+             sName = GetFriendlyPatchNum(m_patchNumber) + " " + sName;
+        this->Caption = sName;
     }
 }
 //---------------------------------------------------------------------------
@@ -1102,8 +1190,6 @@ String __fastcall TFormPatch::GetFriendlyPatchNum(int patch)
 //---------------------------------------------------------------------------
 TStringGrid * __fastcall TFormPatch::GetSgPtr(int tabIndex)
 {
-    TStringGrid *sg;
-
     switch(tabIndex)
     {
         case tUP1:
@@ -1140,6 +1226,9 @@ void __fastcall TFormPatch::PutTempArea(void)
 
     try
     {
+        // update caption to current cPatch name and number in grid
+        SetCaptionAndPatchNumberToTabCellValues(true);
+
         FormMain->OpenMidiOut();
 
         for (int ii = 0; ii < TOTAL_TABS; ii++)
@@ -1154,10 +1243,10 @@ void __fastcall TFormPatch::PutTempArea(void)
     }
 }
 //---------------------------------------------------------------------------
-void __fastcall TFormPatch::GetTempArea(int patchNum)
+bool __fastcall TFormPatch::GetTempArea(int patchNum)
 {
     if (FormMain->SystemBusy)
-        return;
+        return false;
 
     if (FormMain->IsPlaying)
         FormMain->CloseMidiOut();
@@ -1175,10 +1264,10 @@ void __fastcall TFormPatch::GetTempArea(int patchNum)
             InitDataGrid(tabIndex);
 
             if (!FormMain->D50GetTempArea(ROLANDADDRESS[tabIndex], buf))
-                return;
+                return false;
 
             if (!WriteToGrid(tabIndex, &buf[8]))
-                return;
+                return false;
         }
 
         // Ideally, the D-50 could tell us what patch it's set to, but it can't,
@@ -1187,21 +1276,21 @@ void __fastcall TFormPatch::GetTempArea(int patchNum)
         // have no place to store it that will be embedded in a patch-file
         // for the DataGrid unless we put it in one of the "spare" parameter
         // slots on the D-50... so I'm using slot 64 in the Patch Tab grid...
-        PatchSG->Cells[rVal][D50_PATCH_SECTION_SIZE] = String(patchNum);
+        PatchSG->Cells[cVal][D50_PATCH_SECTION_SIZE] = String(patchNum);
 
         // set the caption to the first D50_PATCH_NAME_LENGTH chars in patch-tab column 1
         // (sets m_patchName and m_patchNumber from grid)
         SetCaptionAndPatchNumberToTabCellValues(true);
 
         ReadFromGrid(origGridVals); // save original vals
-
-        this->Visible = true;
     }
     __finally
     {
         FormMain->CloseMidiOut();
         FormMain->CloseMidiIn();
     }
+
+    return true;
 }
 //---------------------------------------------------------------------------
 void __fastcall TFormPatch::LoadPatchFileIntoD50AndDataGrid(String sPath)
@@ -1327,8 +1416,6 @@ void __fastcall TFormPatch::LoadPatchFileIntoD50AndDataGrid(String sPath)
 
         ReadFromGrid(origGridVals); // save original vals
 
-        this->Visible = true;
-
         MenuItemFormPatchPlayClick(NULL); // play it!
     }
 }
@@ -1337,8 +1424,8 @@ void __fastcall TFormPatch::MenuItemFormPatchAllNotesOffClick(TObject *Sender)
 {
     if (m_randomizationOn)
         SetRandomization(false);
-
-    FormMain->PatchChange(); // silence playing sounds and revert to base patch
+    else
+        FormMain->PatchChange(); // silence playing sounds and revert to base patch
 }
 //---------------------------------------------------------------------------
 void __fastcall TFormPatch::MenuItemFormPatchPlayClick(TObject *Sender)
@@ -1414,17 +1501,17 @@ void __fastcall TFormPatch::MenuPresetsItemClick(TObject *Sender)
         {
             if (p == NULL)
                 for (int ii = 0; ii < D50_PATCH_SECTION_SIZE; ii++)
-                    sg->Cells[rRand][ii+1] = "";
+                    sg->Cells[cRand][ii+1] = "";
             else
                 for (int ii = 0; ii < D50_PATCH_SECTION_SIZE; ii++)
-                    sg->Cells[rRand][ii+1] = p[ii] ? "On" : "";
+                    sg->Cells[cRand][ii+1] = p[ii] ? "On" : "";
         }
     }
 }
 //---------------------------------------------------------------------------
 void __fastcall TFormPatch::MenuPatchFormSetRandClick(TObject *Sender)
 {
-    FormSetRand->Visible = true;
+    m_pFormSetRand->Visible = true;
 }
 //---------------------------------------------------------------------------
 void __fastcall TFormPatch::MenuItemFormPatchManualRandomizeClick(TObject *Sender)
@@ -1458,6 +1545,7 @@ void __fastcall TFormPatch::ButtonRandIntervalClick(TObject *Sender)
     m_currentTimer += INC_TIMER;
     if (m_currentTimer > MAX_TIMER)
     {
+      // turn off
       SetRandomization(false);
       m_currentTimer = MIN_TIMER - INC_TIMER;
       TimerSendPatch->Interval = m_currentTimer;
@@ -1470,12 +1558,40 @@ void __fastcall TFormPatch::ButtonRandIntervalClick(TObject *Sender)
       TimerSendPatch->Enabled = true;
     }
   }
-  Application->ProcessMessages();
 }
 //---------------------------------------------------------------------------
-void __fastcall TFormPatch::MenuItemFormPatchLoadClick(TObject *Sender)
+void __fastcall TFormPatch::MenuItemFormRenamePatchClick(TObject *Sender)
 {
-    FormMain->LoadPatchFromD50(true); // allow memory card
+  // update current name to cell values
+  SetCaptionAndPatchNumberToTabCellValues(true);
+
+  // change name
+  TFormRename* pForm;
+  Application->CreateForm(__classid(TFormRename), &pForm);
+  pForm->MaxLength = D50_PATCH_NAME_LENGTH;
+  pForm->NewName = this->PatchName; // show the present name
+  String sName = "";
+  if (pForm->ShowModal() == mrOk)
+    sName = pForm->NewName;
+  pForm->Release();
+
+  if (sName.Length() > 0)
+  {
+      SetPatchTabCellValuesToString(sName);
+
+      // write sName into grid
+      PutTempArea(); // write grid to D-50 temp-area
+  }
+}
+//---------------------------------------------------------------------------
+void __fastcall TFormPatch::SetPatchTabCellValuesToString(String s)
+{
+  int len = s.Length();
+
+  // start at 1 (0 is the column heading)
+  for (int ii = 1 ; ii <= D50_PATCH_NAME_LENGTH ; ii++)
+      PatchSG->Cells[cVal][ii] = (ii <= len) ? s[ii] : ' ';
+  SetCaptionAndPatchNumberToTabCellValues(true);
 }
 //---------------------------------------------------------------------------
 void __fastcall TFormPatch::MenuItemFormPatchChangeClick(TObject *Sender)
@@ -1487,7 +1603,41 @@ void __fastcall TFormPatch::MenuItemFormPatchChangeClick(TObject *Sender)
     // was loaded from a file and we are changing the original location...
     // So should we have two functions? "Load new base patch" and "Retarget to new patch number"
 //    FormMain->SelectPatch();
-    FormMain->RetargetPatch();
+    RetargetPatch();
+}
+//---------------------------------------------------------------------------
+void __fastcall TFormPatch::RetargetPatch(void)
+{
+  // Send Patch Change control-message to the D-50
+  TFormSelectPatch* pForm;
+  Application->CreateForm(__classid(TFormSelectPatch), &pForm);
+  pForm->AllowCard = false; // don't allow card
+  pForm->Patch = FormMain->CurrentPatch;
+  int patch = -1;
+  if (pForm->ShowModal() == mrOk)
+    patch = pForm->Patch;
+  pForm->Release();
+
+  if (patch >= 0)
+  {
+      FormMain->PatchChange(patch); // change patch on the D-50
+      PatchNumberChange(patch); // change patch in the grid
+      PutTempArea(); // write grid to D-50 temp-area
+  }
+}
+//---------------------------------------------------------------------------
+void __fastcall TFormPatch::ManuPopupPasteValsClick(TObject *Sender)
+{
+    int page = PageControl->ActivePageIndex;
+    if (page >=0 && page <= TOTAL_TABS)
+        ClipboardToVals(page);
+}
+//---------------------------------------------------------------------------
+void __fastcall TFormPatch::ManuPopupCopyValsClick(TObject *Sender)
+{
+    int page = PageControl->ActivePageIndex;
+    if (page >=0 && page <= TOTAL_TABS)
+        ValsToClipboard(page);
 }
 //---------------------------------------------------------------------------
 

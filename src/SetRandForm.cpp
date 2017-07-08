@@ -8,11 +8,13 @@
 //---------------------------------------------------------------------------
 #pragma package(smart_init)
 #pragma resource "*.dfm"
-TFormSetRand *FormSetRand;
 //---------------------------------------------------------------------------
 __fastcall TFormSetRand::TFormSetRand(TComponent* Owner)
     : TForm(Owner)
 {
+    // our creator must be a TFormPatch!
+    g_formPatch = reinterpret_cast<TFormPatch*>(Owner);
+
     InitializeCheckBoxMasks();
 
     // set tags for tab checkboxes to the tab-index in FormPatch!

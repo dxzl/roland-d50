@@ -7,9 +7,10 @@
 #include <Vcl.Styles.hpp>
 #include <Vcl.Themes.hpp>
 USEFORM("PatchForm.cpp", FormPatch);
-USEFORM("SelectPatch.cpp", FormSelectPatch);
+USEFORM("SelectPatchForm.cpp", FormSelectPatch);
 USEFORM("SetRandForm.cpp", FormSetRand);
 USEFORM("MainForm.cpp", FormMain);
+USEFORM("RenameForm.cpp", FormRename);
 //---------------------------------------------------------------------------
 int WINAPI _tWinMain(HINSTANCE, HINSTANCE, LPTSTR, int)
 {
@@ -19,7 +20,6 @@ int WINAPI _tWinMain(HINSTANCE, HINSTANCE, LPTSTR, int)
 		Application->MainFormOnTaskBar = true;
 		TStyleManager::TrySetStyle("Obsidian");
 		Application->CreateForm(__classid(TFormMain), &FormMain);
-     Application->CreateForm(__classid(TFormPatch), &FormPatch);
      Application->Run();
 	}
 	catch (Exception &exception)

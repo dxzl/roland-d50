@@ -78,7 +78,7 @@
 
 #include "RegHelper.h"
 #include "PatchForm.h"
-#include "SelectPatch.h"
+#include "SelectPatchForm.h"
 #include <stdio.h>
 #include <math.h>
 //---------------------------------------------------------------------------
@@ -111,7 +111,7 @@ void __fastcall TFormMain::FormCreate(TObject *Sender)
     g_inBufferFull = false;
     g_abort = false;
     g_systemBusy = false;
-    g_currentPatch = 0;
+    g_currentPatch = -1;
 
     // read settings from registry HKEY_CURRENT_USER
     // \\Software\\Discrete-Time Systems\\AkaiS950
@@ -209,6 +209,8 @@ void __fastcall TFormMain::FormCreate(TObject *Sender)
         catch (...) {}
     }
 
+    g_patchForms = new TList; // list of pointers to patch-forms
+
     SetWorkingDir(g_docPath);
 
     printm(VERSION_STR);
@@ -223,6 +225,8 @@ void __fastcall TFormMain::FormCreate(TObject *Sender)
 //---------------------------------------------------------------------------
 void __fastcall TFormMain::FormDestroy(TObject *Sender)
 {
+    if (g_patchForms)
+      delete g_patchForms;
     if (g_midiIn)
         delete g_midiIn;
     if (g_midiOut)
@@ -248,6 +252,21 @@ void __fastcall TFormMain::FormClose(TObject *Sender, TCloseAction &Action)
 
     try
     {
+        // delete all the patch forms
+        if (g_patchForms)
+        {
+            int count = g_patchForms->Count;
+            for (int ii = 0; ii < count; ii++)
+            {
+              TFormPatch* f = reinterpret_cast<TFormPatch*>(g_patchForms->Items[ii]);
+              if (f)
+                delete f; // delete the form
+            }
+        }
+
+        CloseMidiIn();
+        CloseMidiOut();
+
         pReg = new TRegHelper(false);
 
         if (pReg != NULL)
@@ -277,18 +296,104 @@ void __fastcall TFormMain::FormKeyDown(TObject *Sender, WORD &Key, TShiftState S
 //---------------------------------------------------------------------------
 void __fastcall TFormMain::Save64IntPatchesClick(TObject *Sender)
 {
-    FormPatch->ReadPatchesAndSaveTo64Files(false);
+    ReadPatchesAndSaveTo64Files(false);
 }
 //---------------------------------------------------------------------------
 void __fastcall TFormMain::Save64CrdPatchesClick(TObject *Sender)
 {
-    FormPatch->ReadPatchesAndSaveTo64Files(true);
+    ReadPatchesAndSaveTo64Files(true);
 }
 //---------------------------------------------------------------------------
-void __fastcall TFormMain::MenuViewPatchGridClick(TObject *Sender)
+// This reads all 64 patches stored on the Roland D-50 Synth and saves them
+// to 64 individual patch-files in subdirectory "PatchSave"
+// he's hearing...
+void __fastcall TFormMain::ReadPatchesAndSaveTo64Files(bool bCard)
 {
-    FormPatch->Visible = !FormPatch->Visible;
-    MenuViewPatchGrid->Checked = FormPatch->Visible;
+    // append all the data-grids
+    TStringList* allGrids = NULL;
+    TFormPatch* pFormPatch = NULL;
+
+    try
+    {
+        pFormPatch = AddPatchForm(); // make a TPatchForm to use as a scratchpad
+
+        if (!pFormPatch) return;
+
+        allGrids = new TStringList();
+
+        String fileDir = this->DocPath;
+
+        int pos = fileDir.LowerCase().Pos("\\patchsave\\");
+
+        if (pos == 0)
+            fileDir += "\\PatchSave\\";
+
+        if (!DirectoryExists(fileDir))
+            CreateDir(fileDir);
+
+        // Note: to xfer mmemory-card patches, on D-50 press Data Transfer
+        // Crd->Int
+        for(int patchNum = 0; patchNum < TOTAL_PATCHES_ON_D50; patchNum++)
+        {
+            if (bCard)
+                patchNum += 64;
+
+            PatchChange(patchNum);
+
+            // load D-50 temp-area into data grid and save original values
+            if (pFormPatch->GetTempArea(patchNum))
+              Memo1->Clear();
+            else
+            {
+              RemovePatchForm(pFormPatch);
+              return;
+            }
+
+            // save as file
+            String filePath;
+
+            String sNew;
+
+            String sName = pFormPatch->PatchName;
+
+            // PatchName is trimmed and set in SetCaptionAndPatchNumberToTabCellValues()
+
+            for (int ii = 1; ii <= sName.Length(); ii++)
+            {
+                Char c = sName[ii];
+                if (c != ' ')
+                    sNew += c;
+            }
+
+            if (sNew.IsEmpty())
+                sNew = "blank";
+
+            int ii = 0;
+
+            do {
+                filePath = fileDir + sNew +
+                    System::Sysutils::Format("%2.2d", ARRAYOFCONST((ii++))) + ".d50";
+            }
+            while (FileExists(filePath));
+
+            // get all the tab data into a stringlist and write to patch-file
+            allGrids->Clear();
+            pFormPatch->ReadFromGrid(allGrids);
+
+            if (allGrids->Count)
+            {
+                allGrids->SaveToFile(filePath);
+                this->SetWorkingDir(fileDir);
+            }
+        }
+    }
+    __finally
+    {
+        RemovePatchForm(pFormPatch);
+
+        if (allGrids)
+            delete allGrids;
+    }
 }
 //---------------------------------------------------------------------------
 void __fastcall TFormMain::MenuItemSetWorkingDirectoryPathClick(TObject *Sender)
@@ -399,24 +504,27 @@ void __fastcall TFormMain::ComboBoxMidiChanChange(TObject *Sender)
     Memo1->SetFocus();
 }
 //---------------------------------------------------------------------------
-void __fastcall TFormMain::MenuOpenFileClick(TObject *Sender)
-{
-    FormPatch->LoadPatchFileIntoD50AndDataGrid(FileListBox1->FileName);
-}
-//---------------------------------------------------------------------------
 void __fastcall TFormMain::PopupMenuItemOpenClick(TObject *Sender)
 {
-    FormPatch->LoadPatchFileIntoD50AndDataGrid(FileListBox1->FileName);
+    MenuOpenFileClick(NULL);
+}
+//---------------------------------------------------------------------------
+void __fastcall TFormMain::FileListBox1DblClick(TObject *Sender)
+{
+    MenuOpenFileClick(NULL);
+}
+//---------------------------------------------------------------------------
+void __fastcall TFormMain::MenuOpenFileClick(TObject *Sender)
+{
+    TFormPatch* pPatchForm = AddPatchForm();
+
+    if (pPatchForm)
+        pPatchForm->LoadPatchFileIntoD50AndDataGrid(FileListBox1->FileName);
 }
 //---------------------------------------------------------------------------
 void __fastcall TFormMain::PopupMenuItemDeleteClick(TObject *Sender)
 {
     DeleteSelectedFile();
-}
-//---------------------------------------------------------------------------
-void __fastcall TFormMain::FileListBox1DblClick(TObject *Sender)
-{
-    FormPatch->LoadPatchFileIntoD50AndDataGrid(FileListBox1->FileName);
 }
 //---------------------------------------------------------------------------
 void __fastcall TFormMain::MenuSetBasePatchClick(TObject *Sender)
@@ -437,41 +545,68 @@ void __fastcall TFormMain::LoadPatchFromD50(bool bAllowCard)
 
   if (patch >= 0)
   {
-    PatchChange(patch);
-    FormPatch->GetTempArea(patch); // load D-50 temp-area into data grid and save original values
-    Memo1->Clear();
+    TFormPatch* pFormPatch = AddPatchForm();
+
+    if (pFormPatch)
+    {
+      PatchChange(patch);
+
+      // load D-50 temp-area into data grid and save original values
+      if (pFormPatch->GetTempArea(patch))
+        Memo1->Clear();
+      else
+      {
+        RemovePatchForm(pFormPatch);
+        return;
+      }
+    }
   }
 }
 //---------------------------------------------------------------------------
-void __fastcall TFormMain::RetargetPatch(void)
+void __fastcall TFormMain::RemovePatchForm(TFormPatch *p)
 {
-  // Send Patch Change control-message to the D-50
-  Application->CreateForm(__classid(TFormSelectPatch), &FormSelectPatch);
-  FormSelectPatch->AllowCard = false; // don't allow card
-  FormSelectPatch->Patch = g_currentPatch;
-  int patch = -1;
-  if (FormSelectPatch->ShowModal() == mrOk)
-    patch = FormSelectPatch->Patch;
-  FormSelectPatch->Release();
+    if (!p || !g_patchForms || g_patchForms->Count == 0)
+      return;
 
-  if (patch >= 0)
-  {
-    PatchChange(patch); // change patch on the D-50
-    FormPatch->PatchChange(patch); // change patch in the grid
-    FormPatch->PutTempArea(); // write grid to D-50 temp-area
-    Memo1->Clear();
-  }
+    int idx = g_patchForms->IndexOf(p);
+    if (idx >= 0)
+    {
+        TFormPatch* f = reinterpret_cast<TFormPatch*>(g_patchForms->Items[idx]);
+        if (f)
+          delete f; // delete the form
+//          f->Release(); // delete the form
+        g_patchForms->Delete(idx); // remove its pointer from list
+    }
+}
+//---------------------------------------------------------------------------
+TFormPatch * __fastcall TFormMain::AddPatchForm(void)
+{
+    // create a new patch form
+    TFormPatch* f = NULL;
+    try
+    {
+      f = new TFormPatch(this);
+
+      // add new form's pointer to our list
+      if (f)
+        g_patchForms->Add(f);
+    }
+    catch(...){}
+
+    return f;
 }
 //---------------------------------------------------------------------------
 void __fastcall TFormMain::MenuGetTempAreaClick(TObject *Sender)
 {
-    FormPatch->GetTempArea(g_currentPatch); // load D-50 temp-area into data grid and save original values
-    Memo1->Clear();
-}
-//---------------------------------------------------------------------------
-void __fastcall TFormMain::MenuPutTempAreaClick(TObject *Sender)
-{
-    FormPatch->PutTempArea();
+    TFormPatch* pFormPatch = AddPatchForm();
+    if (pFormPatch)
+    {
+      // load D-50 temp-area into data grid and save original values
+      if (pFormPatch->GetTempArea(g_currentPatch))
+        Memo1->Clear();
+      else
+        RemovePatchForm(pFormPatch);
+    }
 }
 //---------------------------------------------------------------------------
 void __fastcall TFormMain::MenuAboutClick(TObject *Sender)
@@ -761,7 +896,7 @@ void __fastcall TFormMain::PatchChange(void)
 
 void __fastcall TFormMain::PatchChange(int patch)
 {
-    if (!g_midiOut)
+    if (!g_midiOut || SystemBusy)
         return;
 
     bool bWasOpen = g_midiOut->is_opened();
@@ -1878,6 +2013,48 @@ void __fastcall TFormMain::Help1Click(TObject *Sender)
 "To send a patch to your D-50, double-click it or right-click and choose Play from the pop-up menu.\n";
 
   ShowMessage(sHelp);
+}
+//---------------------------------------------------------------------------
+void __fastcall TFormMain::PatchFormActivatedTimeout(TObject *Sender)
+{
+    PatchFormActivatedTimer->Enabled = false;
+
+    // find the active FormPatch...
+    int count = g_patchForms->Count;
+    for (int ii = 0; ii < count; ii++)
+    {
+        TFormPatch* f = reinterpret_cast<TFormPatch*>(g_patchForms->Items[ii]);
+        if (f)
+        {
+            if (f->Active)
+                FormPatchActivated(f);
+            else // disable timers on other patch forms...
+            {
+                if (f->TimerOver10Percent->Enabled)
+                    f->TimerOver10Percent->Enabled = false;
+                if (f->TimerSendPatch->Enabled)
+                    f->TimerSendPatch->Enabled = false;
+
+            }
+        }
+    }
+}
+//---------------------------------------------------------------------------
+void __fastcall TFormMain::FormPatchActivated(TFormPatch *f)
+{
+    if (CurrentPatch != f->PatchNumber)
+    {
+        PatchChange(f->PatchNumber); // change patch on the D-50
+        f->PutTempArea(); // write grid to D-50 temp-area
+    }
+
+    // restart randomization
+    if (f->RandomizationOn)
+    {
+        f->TimerSendPatch->Enabled = false;
+        f->TimerSendPatch->Interval = f->CurrentTimer;
+        f->TimerSendPatch->Enabled = true;
+    }
 }
 //---------------------------------------------------------------------------
 

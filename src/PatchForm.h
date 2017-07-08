@@ -103,6 +103,7 @@ Converts a string of UTF-8 characters to a Unicode string.
 #include <Vcl.ComCtrls.hpp>
 #include <Vcl.ExtCtrls.hpp>
 #include <Vcl.Dialogs.hpp>
+#include <Vcl.Clipbrd.hpp>
 //---------------------------------------------------------------------------
 #define NOTESTATE_IDLE          0
 #define NOTESTATE_WAIT_ON       1
@@ -147,8 +148,11 @@ Converts a string of UTF-8 characters to a Unicode string.
 #define MIDI_BUFSIZE 4096
 //---------------------------------------------------------------------------
 enum tabConst { tUP1, tUP2, tUC, tLP1, tLP2, tLC, tP };
-enum rowConst { rLabel, rVal, rMax, rRand };
+enum colConst { cLabel, cVal, cMax, cRand };
 //---------------------------------------------------------------------------
+// forward reference
+class TFormSetRand;
+
 class TFormPatch : public TForm
 {
 __published:    // IDE-managed Components
@@ -158,7 +162,7 @@ __published:    // IDE-managed Components
     TMenuItem *MenuItemFormPatchEnforceMinMaxValue;
     TTimer *TimerSendPatch;
     TMenuItem *MenuItemFormPatchStartStopRandom;
-    TMenuItem *MenuItemFormPatchSendToTempArea;
+  TMenuItem *MenuItemFormPatchWrite;
     TMenuItem *MenuItemFormPatchAllNotesOff;
   TTimer *TimerOver10Percent;
     TMenuItem *MenuItemFormPatchPlay;
@@ -175,14 +179,12 @@ __published:    // IDE-managed Components
   TMenuItem *MenuItemFormPatchManualRandomize;
   TMenuItem *N2;
   TMenuItem *N3;
-  TMenuItem *N4;
   TMenuItem *N5;
   TMenuItem *N6;
   TMenuItem *MenuHelp;
   TPageControl *PageControl;
   TTabSheet *UpperPartial1;
   TStringGrid *UpperPartial1SG;
-  TPanel *Panel1;
   TTabSheet *UpperPartial2;
   TStringGrid *UpperPartial2SG;
   TTabSheet *UpperCommon;
@@ -195,18 +197,24 @@ __published:    // IDE-managed Components
   TStringGrid *LowerCommonSG;
   TTabSheet *Patch;
   TStringGrid *PatchSG;
-  TButton *ButtonRandInterval;
-  TLabel *LabelRand;
-  TMenuItem *MenuItemFormPatchReload;
+  TMenuItem *MenuItemFormPatchRead;
   TMenuItem *MenuItemFormPatchChange;
+  TMenuItem *N4;
+  TPopupMenu *PopupMenu1;
+  TMenuItem *ManuPopupCopyVals;
+  TMenuItem *ManuPopupPasteVals;
+  TMenuItem *MenuItemFormPatchRename;
+  TPanel *Panel1;
+  TLabel *LabelRand;
+  TButton *ButtonRandInterval;
     void __fastcall FormCreate(TObject *Sender);
     void __fastcall SGDblClick(TObject *Sender);
-    void __fastcall MenuItemFormPatchWriteToFileClick(TObject *Sender);
-    void __fastcall MenuItemFormPatchEnforceMinMaxValueClick(TObject *Sender);
+    void __fastcall MenuItemFormPatchWriteFileClick(TObject *Sender);
+    void __fastcall MenuItemFormPatchLimitToMinMaxValueClick(TObject *Sender);
     void __fastcall TimerSendPatchTimer(TObject *Sender);
     void __fastcall MenuItemFormPatchStartStopRandomClick(TObject *Sender);
     void __fastcall FormKeyDown(TObject *Sender, WORD &Key, TShiftState Shift);
-    void __fastcall MenuItemFormPatchSendToTempAreaClick(TObject *Sender);
+    void __fastcall MenuItemFormPatchWriteTempClick(TObject *Sender);
     void __fastcall FormClose(TObject *Sender, TCloseAction &Action);
     void __fastcall MenuItemFormPatchAllNotesOffClick(TObject *Sender);
     void __fastcall TimerOver10PercentTimer(TObject *Sender);
@@ -214,13 +222,21 @@ __published:    // IDE-managed Components
     void __fastcall FormDestroy(TObject *Sender);
     void __fastcall MenuPresetsItemClick(TObject *Sender);
     void __fastcall MenuPatchFormSetRandClick(TObject *Sender);
-    void __fastcall Exportpatchtosyxbinaryfile1Click(TObject *Sender);
+    void __fastcall MenuItemFormPatchWriteSYXFileClick(TObject *Sender);
   void __fastcall MenuItemFormPatchManualRandomizeClick(TObject *Sender);
   void __fastcall MenuHelpClick(TObject *Sender);
   void __fastcall ButtonRandIntervalClick(TObject *Sender);
-  void __fastcall MenuItemFormPatchLoadClick(TObject *Sender);
   void __fastcall MenuItemFormPatchChangeClick(TObject *Sender);
+  void __fastcall FormShow(TObject *Sender);
+  void __fastcall MenuItemFormPatchReadTempClick(TObject *Sender);
+  void __fastcall ManuPopupPasteValsClick(TObject *Sender);
+  void __fastcall ManuPopupCopyValsClick(TObject *Sender);
+  void __fastcall MenuItemFormRenamePatchClick(TObject *Sender);
+  void __fastcall FormActivate(TObject *Sender);
 private:    // User declarations
+    bool __fastcall ValsToClipboard(int tabIndex);
+    bool __fastcall ClipboardToVals(int tabIndex);
+    void __fastcall RetargetPatch(void);
     void __fastcall Restore(void);
     void __fastcall SetRandomization(bool flag);
     void __fastcall EnforceDataRange(int tabIndex);
@@ -234,6 +250,7 @@ private:    // User declarations
     bool __fastcall WriteToGrid(int tabIndex, String sColVals, int column=1);
     void __fastcall SaveSyxFile(String filePath, TStringList *sl);
 
+    void __fastcall SetPatchTabCellValuesToString(String s);
     void __fastcall SetCaptionAndPatchNumberToTabCellValues(bool bAppendPatchNumber);
     String __fastcall GetFriendlyPatchNum(int patch);
 
@@ -247,6 +264,7 @@ private:    // User declarations
     unsigned m_currentTimer;
     int m_patchNumber;
     String m_patchName;
+    TFormSetRand* m_pFormSetRand;
     TStringList *prevGridVals;
     TStringList *origGridVals;
     TStopwatch *stopWatch;
@@ -260,13 +278,15 @@ public:     // User declarations
     void __fastcall ManualRandomize(unsigned __int64 masks[]);
     void __fastcall SetRandFlags(int tabIndex, unsigned __int64 mask, bool bOnOff);
     void __fastcall LoadPatchFileIntoD50AndDataGrid(String sPath);
-    void __fastcall GetTempArea(int patchNum);
+    bool __fastcall GetTempArea(int patchNum);
     void __fastcall PutTempArea(void);
     void __fastcall WritePatchToFile(bool bSyx);
-    void __fastcall ReadPatchesAndSaveTo64Files(bool bCard);
-    void __fastcall PatchChange(int newPatch);
+    void __fastcall PatchNumberChange(int newPatch);
+
+    __property String PatchName = {read = m_patchName};
+    __property int PatchNumber = {read = m_patchNumber};
+    __property unsigned CurrentTimer = {read = m_currentTimer};
+    __property bool RandomizationOn = {read = m_randomizationOn};
 };
-//---------------------------------------------------------------------------
-extern PACKAGE TFormPatch *FormPatch;
 //---------------------------------------------------------------------------
 #endif

@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------
 
-#ifndef SelectPatchH
-#define SelectPatchH
+#ifndef SelectPatchFormH
+#define SelectPatchFormH
 //---------------------------------------------------------------------------
 #include <System.Classes.hpp>
 #include <Vcl.Controls.hpp>

@@ -24,7 +24,7 @@
 // defines
 //---------------------------------------------------------------------------
 // Note: Use String() to wrap this for the overloaded RegHelper write method!
-#define VERSION_STR "Version 1.46: July 4, 2017"
+#define VERSION_STR "Version 1.47: July 8, 2017"
 //---------------------------------------------------------------------------
 
 #define REGISTRY_KEY "\\Software\\Discrete-Time Systems\\RolandD50"
@@ -143,6 +143,8 @@
 #define PAR_12 "0000000000000110000000000001100000000000000000000000000000000000" // c12 TVA Other
 #define PAR_13 "0000000000111000000000000000000000000000000000000000000000000000" // c13 TVA Mod
 
+class TFormPatch;
+
 //---------------------------------------------------------------------------
 class TFormMain : public TForm
 {
@@ -155,7 +157,6 @@ __published:  // IDE-managed Components
     TMemo *Memo1;
     TTimer *Timer1;
     TMenuItem *MenuGetTempArea;
-    TMenuItem *MenuPutTempArea;
     TMenuItem *N4;
   TMenuItem *MenuAbout;
     TPanel *Panel3;
@@ -174,7 +175,6 @@ __published:  // IDE-managed Components
     TMenuItem *PopupMenuItemDelete;
     TMenuItem *MenuOpenFile;
     TMenuItem *N1;
-    TMenuItem *MenuViewPatchGrid;
   TMenuItem *Save64IntPatches;
     TMenuItem *N2;
     TMenuItem *MenuItemSetWorkingDirectoryPath;
@@ -182,9 +182,9 @@ __published:  // IDE-managed Components
   TMenuItem *MenuLoadPatchFromD50;
   TMenuItem *Save64CrdPatches;
   TMenuItem *N3;
+  TTimer *PatchFormActivatedTimer;
 
     void __fastcall MenuGetTempAreaClick(TObject *Sender);
-    void __fastcall MenuPutTempAreaClick(TObject *Sender);
     void __fastcall MenuAboutClick(TObject *Sender);
     void __fastcall FormCreate(TObject *Sender);
     void __fastcall TimerFileDrop(TObject *Sender);
@@ -200,15 +200,17 @@ __published:  // IDE-managed Components
     void __fastcall PopupMenuItemDeleteClick(TObject *Sender);
     void __fastcall FileListBox1DblClick(TObject *Sender);
     void __fastcall MenuOpenFileClick(TObject *Sender);
-    void __fastcall MenuViewPatchGridClick(TObject *Sender);
     void __fastcall Save64IntPatchesClick(TObject *Sender);
     void __fastcall MenuItemSetWorkingDirectoryPathClick(TObject *Sender);
   void __fastcall Help1Click(TObject *Sender);
   void __fastcall MenuSetBasePatchClick(TObject *Sender);
   void __fastcall Edit1KeyDown(TObject *Sender, WORD &Key, TShiftState Shift);
   void __fastcall Save64CrdPatchesClick(TObject *Sender);
+  void __fastcall PatchFormActivatedTimeout(TObject *Sender);
 
 private:  // User declarations
+    void __fastcall FormPatchActivated(TFormPatch *f);
+
     void __fastcall TimerGpTimeout(TObject *Sender);
     void __fastcall TimerRxTimeout(TObject *Sender);
     void __fastcall TimerTxTimeout(TObject *Sender);
@@ -222,6 +224,8 @@ private:  // User declarations
     void __fastcall OnMidiInputHandler(TObject *Sender);
     void __fastcall OnMidiDriverCircBufOverflowHandler(TObject *Sender);
 
+    TFormPatch * __fastcall AddPatchForm(void);
+    void __fastcall ReadPatchesAndSaveTo64Files(bool bCard);
     bool __fastcall IsD50Connected(void);
     void __fastcall DeleteSelectedFile(void);
     void __fastcall SetSysExMasterVolume(UInt16 vol);
@@ -245,6 +249,7 @@ private:  // User declarations
     bool g_midiOutDataBeingTransmitted, g_streamPlaying, g_abort;
     TMIDI_Device_Input *g_midiIn;
     TMIDI_Device_Output *g_midiOut;
+    TList* g_patchForms;
 
     String g_DragDropFilePath, g_docPath;
 
@@ -263,7 +268,7 @@ END_MESSAGE_MAP(TComponent)
 public:    // User declarations
     __fastcall TFormMain(TComponent* Owner);
 
-    void __fastcall RetargetPatch(void);
+    void __fastcall RemovePatchForm(TFormPatch *p);
     void __fastcall LoadPatchFromD50(bool bAllowCard);
     void __fastcall SetWorkingDir(String sDir);
     void __fastcall printm(String message);

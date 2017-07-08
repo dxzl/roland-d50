@@ -1,9 +1,9 @@
 //---------------------------------------------------------------------------
-
 #include <vcl.h>
+#include "MainForm.h"
 #pragma hdrstop
 
-#include "SelectPatch.h"
+#include "SelectPatchForm.h"
 //---------------------------------------------------------------------------
 #pragma package(smart_init)
 #pragma resource "*.dfm"
@@ -20,13 +20,15 @@ void __fastcall TFormSelectPatch::FormClose(TObject *Sender, TCloseAction &Actio
 {
   FPatch = ComboBox1->ItemIndex; // 0-63
   if (RadioGroup1->ItemIndex == 1)
-    FPatch += 64;
+    FPatch += TOTAL_PATCHES_ON_D50;
 }
 //---------------------------------------------------------------------------
 void __fastcall TFormSelectPatch::FormShow(TObject *Sender)
 {
   RadioGroup1->Enabled = FAllowCard;
-  RadioGroup1->ItemIndex = (FPatch > 63 && FAllowCard) ? 1 : 0;
-  ComboBox1->ItemIndex = (FPatch > 63) ? FPatch-64 : FPatch;
+  if (FPatch < 0 || FPatch > TOTAL_PATCHES_ON_D50*2)
+      FPatch = 0;
+  RadioGroup1->ItemIndex = (FPatch > TOTAL_PATCHES_ON_D50-1 && FAllowCard) ? 1 : 0;
+  ComboBox1->ItemIndex = (FPatch > TOTAL_PATCHES_ON_D50-1) ? FPatch-TOTAL_PATCHES_ON_D50 : FPatch;
 }
 //---------------------------------------------------------------------------
