@@ -134,8 +134,8 @@ void __fastcall TFormMain::FormCreate(TObject *Sender)
                     printm("This app stores its settings in the windows registry.\r\n"
                         "To delete settings, go to Start => Run and type \"cmd\"\r\n"
                         "In the window type the line below and press enter:\r\n\r\n"
-                        "reg delete \"HKCU\\Software\\Discrete-Time Systems\\AkaiS950\" /f\r\n"
-                        "(or: Start => Run, \"regedit\" and search for \"AkaiS950\")\r\n");
+                        "reg delete \"HKCU\\Software\\Discrete-Time Systems\\RolandD50\" /f\r\n"
+                        "(or: Start => Run, \"regedit\" and search for \"RolandD50\")\r\n");
                 }
 
                 pReg->ReadSetting(S9_REGKEY_MIDI_CHAN, g_midiChan, 0);
@@ -214,7 +214,8 @@ void __fastcall TFormMain::FormCreate(TObject *Sender)
     SetWorkingDir(g_docPath);
 
     printm(VERSION_STR);
-    printm("Click \"Menu\" and select \"Help\"...");
+    printm("Click \"Menu\" and select \"Help\"...\r\n\r\n");
+    printm("(Note: This program writes to your D-50's temp-area only and will never overwrite your saved patches!)\n");
 
     // Create midi In/Out objects and populate device combo-boxes
     MidiDeviceListRefresh();
@@ -253,16 +254,7 @@ void __fastcall TFormMain::FormClose(TObject *Sender, TCloseAction &Action)
     try
     {
         // delete all the patch forms
-        if (g_patchForms)
-        {
-            int count = g_patchForms->Count;
-            for (int ii = 0; ii < count; ii++)
-            {
-              TFormPatch* f = reinterpret_cast<TFormPatch*>(g_patchForms->Items[ii]);
-              if (f)
-                delete f; // delete the form
-            }
-        }
+        RemoveAllPatchForms();
 
         CloseMidiIn();
         CloseMidiOut();
@@ -315,76 +307,91 @@ void __fastcall TFormMain::ReadPatchesAndSaveTo64Files(bool bCard)
 
     try
     {
-        pFormPatch = AddPatchForm(); // make a TPatchForm to use as a scratchpad
-
-        if (!pFormPatch) return;
-
-        allGrids = new TStringList();
-
-        String fileDir = this->DocPath;
-
-        int pos = fileDir.LowerCase().Pos("\\patchsave\\");
-
-        if (pos == 0)
-            fileDir += "\\PatchSave\\";
-
-        if (!DirectoryExists(fileDir))
-            CreateDir(fileDir);
-
-        // Note: to xfer mmemory-card patches, on D-50 press Data Transfer
-        // Crd->Int
-        for(int patchNum = 0; patchNum < TOTAL_PATCHES_ON_D50; patchNum++)
+        try
         {
-            if (bCard)
-                patchNum += 64;
+            RemoveAllPatchForms();
 
-            PatchChange(patchNum);
+            pFormPatch = AddPatchForm(); // make a TPatchForm to use as a scratchpad
 
-            // load D-50 temp-area into data grid and save original values
-            if (pFormPatch->GetTempArea(patchNum))
-              Memo1->Clear();
-            else
+            if (!pFormPatch)
             {
-              RemovePatchForm(pFormPatch);
-              return;
+                ShowMessage("Unable to add new patch form...");
+                return;
             }
 
-            // save as file
-            String filePath;
+            allGrids = new TStringList();
 
-            String sNew;
+            String fileDir = this->DocPath;
 
-            String sName = pFormPatch->PatchName;
+            int pos = fileDir.LowerCase().Pos("\\patchsave\\");
 
-            // PatchName is trimmed and set in SetCaptionAndPatchNumberToTabCellValues()
+            if (pos <= 0)
+                fileDir += "\\PatchSave\\";
 
-            for (int ii = 1; ii <= sName.Length(); ii++)
+            if (!DirectoryExists(fileDir))
+                CreateDir(fileDir);
+
+            SetWorkingDir(fileDir);
+
+            // Note: to xfer mmemory-card patches, on D-50 press Data Transfer
+            // Crd->Int
+            for(int ii = 0; ii < TOTAL_PATCHES_ON_D50; ii++)
             {
-                Char c = sName[ii];
-                if (c != ' ')
-                    sNew += c;
+                int patchNum = bCard ? ii+TOTAL_PATCHES_ON_D50 : ii;
+
+                PatchChange(patchNum);
+
+                // load D-50 temp-area into data grid and save original values
+                if (pFormPatch->GetTempArea(patchNum))
+                  Memo1->Clear();
+                else
+                {
+                  RemovePatchForm(pFormPatch);
+                  ShowMessage("Problem getting temp-area...");
+                  return;
+                }
+
+                // save as file
+                String filePath;
+
+                String sNew;
+
+                String sName = pFormPatch->PatchName;
+
+                // PatchName is trimmed and set in SetCaptionAndPatchNumberToTabCellValues()
+
+                for (int ii = 1; ii <= sName.Length(); ii++)
+                {
+                    Char c = sName[ii];
+                    if (c != ' ')
+                        sNew += c;
+                }
+
+                if (sNew.IsEmpty())
+                    sNew = "blank";
+
+                int ii = 0;
+
+                do {
+                    filePath = fileDir + sNew +
+                        System::Sysutils::Format("%2.2d", ARRAYOFCONST((ii++))) + ".d50";
+                }
+                while (FileExists(filePath));
+
+                // get all the tab data into a stringlist and write to patch-file
+                allGrids->Clear();
+                pFormPatch->ReadFromGrid(allGrids);
+
+                if (allGrids->Count)
+                {
+                    allGrids->SaveToFile(filePath);
+                    FileListBox1->Update();
+                }
             }
-
-            if (sNew.IsEmpty())
-                sNew = "blank";
-
-            int ii = 0;
-
-            do {
-                filePath = fileDir + sNew +
-                    System::Sysutils::Format("%2.2d", ARRAYOFCONST((ii++))) + ".d50";
-            }
-            while (FileExists(filePath));
-
-            // get all the tab data into a stringlist and write to patch-file
-            allGrids->Clear();
-            pFormPatch->ReadFromGrid(allGrids);
-
-            if (allGrids->Count)
-            {
-                allGrids->SaveToFile(filePath);
-                this->SetWorkingDir(fileDir);
-            }
+        }
+        catch(...)
+        {
+           ShowMessage("Exception thrown while processing...");
         }
     }
     __finally
@@ -431,11 +438,11 @@ void __fastcall TFormMain::TimerDemoTimeout(TObject *Sender)
     if (!IsD50Connected())
         printm("\r\nDid not detect your D-50 - is it on and hooked-up?"
                      "\r\nAre the midi devices and channel correct?"
-                     "\r\n(Click \"Menu->Get temp area\" to retry!)\r\n");
+                     "\r\n(Click \"Menu->Read temp area\" to retry!)\r\n");
     else
     {
         MenuSetBasePatchClick(NULL);
-        Memo1->Clear();
+//        Memo1->Clear();
     }
 }
 //---------------------------------------------------------------------------
@@ -561,6 +568,24 @@ void __fastcall TFormMain::LoadPatchFromD50(bool bAllowCard)
       }
     }
   }
+}
+//---------------------------------------------------------------------------
+void __fastcall TFormMain::RemoveAllPatchForms(void)
+{
+    if (!g_patchForms) return;
+
+    int count = g_patchForms->Count;
+
+    // delete each form in the list
+    for (int ii = 0; ii < count; ii++)
+    {
+      TFormPatch* f = reinterpret_cast<TFormPatch*>(g_patchForms->Items[ii]);
+      if (f)
+        delete f; // delete the form
+    }
+
+    // delete the pointers in the list
+    g_patchForms->Clear();
 }
 //---------------------------------------------------------------------------
 void __fastcall TFormMain::RemovePatchForm(TFormPatch *p)
@@ -915,10 +940,12 @@ void __fastcall TFormMain::PatchChange(int patch)
     if (!bWasOpen)
         CloseMidiOut();
 
-    DelayGpTimer(35); // put some delay between successive calls to this!
-
     if (g_currentPatch != patch)
         g_currentPatch = patch;
+
+    // put some delay between successive calls to this!
+    // 35ms was too little...
+    DelayGpTimer(100);
 }
 //---------------------------------------------------------------------------
 // Master Volume
@@ -2001,7 +2028,7 @@ void __fastcall TFormMain::Help1Click(TObject *Sender)
 "1. Set up your USB midi interface on your computer. The Patch Generator program will try to locate the midi ports automatically when you start it, but you can also set them from the boxes at the top of the program.\n"
 "2. Connect both In and Out midi cables directly between the D-50 and your USB interface.\n"
 "3. Run the patch generator program. It will detect your D-50 automatically and pop up a new window with data from the selected patch on your D-50. If there is a connection problem you will see an error message in a few seconds.\n"
-"4. Click \"Menu->Working Directory Path\" to set the location where you want to store your patch files. The program will create a folder for you called \"RolandD50\" in Documents.\n"
+"4. Click \"Menu->Set patch files storage path\" to set the location where you want to store your patch files. The program will create a folder for you called \"RolandD50\" in Documents.\n"
 "5. To Save all 64 patches presently on your D-50, click \"Menu->Save all 64 patches\". This will place 64 individual patch files in a folder called RolandD50\\PatchSave.\n"
 "6. To start generating new sounds, first select a patch on your D-50 which will be the \"starting point\" for new, modified sounds.\n"
 "   Click Menu->Remotely Change Patch and chose a base patch to use as a starting point.\n"
@@ -2010,7 +2037,8 @@ void __fastcall TFormMain::Help1Click(TObject *Sender)
 "The left panel shows a list of patches that you have generated. Patch file-names are generated automatically.\n"
 "To delete a patch, click it and press the Del key, or right-click and choose Delete in the pop-up menu.\n"
 "To rename a patch, click it and change the name in the lower box then press Enter.\n"
-"To send a patch to your D-50, double-click it or right-click and choose Play from the pop-up menu.\n";
+"To send a patch to your D-50, double-click it or right-click and choose Play from the pop-up menu.\n"
+"NOTE: This program writes to your D-50's temp-area only and will never overwrite your saved patches!\n";
 
   ShowMessage(sHelp);
 }
@@ -2021,23 +2049,32 @@ void __fastcall TFormMain::PatchFormActivatedTimeout(TObject *Sender)
 
     // find the active FormPatch...
     int count = g_patchForms->Count;
+    
+    TFormPatch* fActive = NULL;
+    
+    // turn off timers on inactive forms and save a pointer to the
+    // active form
     for (int ii = 0; ii < count; ii++)
     {
         TFormPatch* f = reinterpret_cast<TFormPatch*>(g_patchForms->Items[ii]);
         if (f)
         {
-            if (f->Active)
-                FormPatchActivated(f);
-            else // disable timers on other patch forms...
-            {
-                if (f->TimerOver10Percent->Enabled)
-                    f->TimerOver10Percent->Enabled = false;
-                if (f->TimerSendPatch->Enabled)
-                    f->TimerSendPatch->Enabled = false;
+          if (!f->Active)
+          {
+              if (f->TimerOver10Percent->Enabled)
+                  f->TimerOver10Percent->Enabled = false;
+              if (f->TimerSendPatch->Enabled)
+                  f->TimerSendPatch->Enabled = false;
 
-            }
-        }
+          }
+          else // form is active, save pointer
+            fActive = f;
+        }  
     }
+    
+    // now change patch to the active form
+    if (fActive)
+        FormPatchActivated(fActive);
 }
 //---------------------------------------------------------------------------
 void __fastcall TFormMain::FormPatchActivated(TFormPatch *f)

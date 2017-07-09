@@ -24,7 +24,7 @@
 // defines
 //---------------------------------------------------------------------------
 // Note: Use String() to wrap this for the overloaded RegHelper write method!
-#define VERSION_STR "Version 1.47: July 8, 2017"
+#define VERSION_STR "Version 1.48: July 9, 2017"
 //---------------------------------------------------------------------------
 
 #define REGISTRY_KEY "\\Software\\Discrete-Time Systems\\RolandD50"
@@ -224,6 +224,7 @@ private:  // User declarations
     void __fastcall OnMidiInputHandler(TObject *Sender);
     void __fastcall OnMidiDriverCircBufOverflowHandler(TObject *Sender);
 
+    void __fastcall RemoveAllPatchForms(void);
     TFormPatch * __fastcall AddPatchForm(void);
     void __fastcall ReadPatchesAndSaveTo64Files(bool bCard);
     bool __fastcall IsD50Connected(void);

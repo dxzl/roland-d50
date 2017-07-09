@@ -996,6 +996,8 @@ bool __fastcall TFormPatch::ReadBufFromGrid(int tabIndex, Byte *data, int column
     }
 }
 //---------------------------------------------------------------------------
+// Overloaded...
+
 // write stringlist into datagrid, can write 7 columns of value-only
 // into column 1 from the first 7 tab-strings in the list, or go on to
 // write column 2 (max values) and column 3 (random On/Off flags)
@@ -1037,7 +1039,7 @@ bool __fastcall TFormPatch::WriteToGrid(TStringList *sl, bool bIncludeRandFlags)
 
     return true;
 }
-//---------------------------------------------------------------------------
+
 bool __fastcall TFormPatch::WriteToGrid(int tabIndex, String sColVals, int column)
 {
     try
@@ -1072,7 +1074,7 @@ bool __fastcall TFormPatch::WriteToGrid(int tabIndex, String sColVals, int colum
         return false;
     }
 }
-//---------------------------------------------------------------------------
+
 // write Byte data into the specified tab's cells
 bool __fastcall TFormPatch::WriteToGrid(int tabIndex, Byte *data, int column)
 {
@@ -1148,12 +1150,10 @@ void __fastcall TFormPatch::SetCaptionAndPatchNumberToTabCellValues(bool bAppend
 
     String sName = m_patchName;
 
-    if (m_patchNumber)
-    {
-        if (bAppendPatchNumber && m_patchNumber >= 0)
-             sName = GetFriendlyPatchNum(m_patchNumber) + " " + sName;
-        this->Caption = sName;
-    }
+    if (bAppendPatchNumber && m_patchNumber >= 0)
+         sName = GetFriendlyPatchNum(m_patchNumber) + " " + sName;
+
+    this->Caption = sName;
 }
 //---------------------------------------------------------------------------
 String __fastcall TFormPatch::GetFriendlyPatchNum(int patch)
@@ -1526,12 +1526,16 @@ void __fastcall TFormPatch::MenuHelpClick(TObject *Sender)
 "Each sound-parameter for the D-50 has a corresponding \"Random Flag\". Only parameters with the flag set to On are allowed to change to new randomly generated values when you press F6.\n\n"
 "The idea is to set a patch on the D-50 you want to start from, then set the parameters you want to allow to randomly vary. Then you press F6 while listening to new sounds until you hear something you want to keep. Press F7 to keep the sound as a patch (it appears in the left panel of the main program).\n\n"
 "Double-click an item in the \"Random Mode\" column to toggle randomization On/Off for that particular parameter.\n\n"
+"F3 - Rename patch (changes the letters in cells 1-18 of the Patch tab)."
+"F4 - Change patch number. This reassigns the patch to a new bank and patch number on your D-50."
 "F5 - Start/Stop timer-driven periotic random new-sound generation (click on the small button in the lower left corner to cycle through allowed times).\n"
-"F6 - Generates a new random sound each time you press F6.\n"
+"F6 - Manually generates a new random sound each time you press F6.\n"
 "F7 - Write the currently playing new sound to a new patch file in Documents\\RolandD50. The name of the file is auto-generated and contains all information from the patch-grid. The files appear in the main program in the left panel. Right-click a file to send it to the D-50 temp-area or delete it. Renamed the file by typong a new name at the bottom and pressing Enter.\n"
 "F8 - All notes off (Restore base patch).\n"
 "F9 - Play a test-sequence of midi nots so you can hear the current sound.\n"
-"F10 - Transmit snapshot of the current patch (with your edits) to the D-50.\n";
+"F10 - Transmit snapshot of the current patch (with your edits) to the D-50.\n"
+"F11 - Read the D50 temp-area into this patch-grid.\n";
+"F12 - Limit to min/max values auto-fixes out-of-range numbers in all Value columns.\n";
 
   ShowMessage(sHelp);
 }
