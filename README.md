@@ -13,4 +13,4 @@ All you vintage synth enthusiasts, enjoy! :-)
 
 Contact: dxzl@live.com
 
-![Preview](d50.png)
+![Preview](D50.png)
