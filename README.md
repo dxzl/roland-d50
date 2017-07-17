@@ -13,4 +13,4 @@ All you vintage synth enthusiasts, enjoy! :-)
 
 Contact: dxzl@live.com
 
-![Preview](https://raw.githubusercontent.com/dxzl/roland-d50/master/d50.png)
+![Preview](d50.png)
