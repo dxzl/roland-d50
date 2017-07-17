@@ -48,7 +48,7 @@ object FormSelectPatch: TFormSelectPatch
     0FFFE0000FFFE00007FFF00003FFF00001FFF00000FFF000007FF800001FF800
     0007F8000003F8000003F8000003FFFFFFFFFFFFFFFF}
   OldCreateOrder = False
-  Position = poMainFormCenter
+  Position = poOwnerFormCenter
   OnClose = FormClose
   OnShow = FormShow
   PixelsPerInch = 96

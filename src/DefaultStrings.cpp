@@ -359,48 +359,50 @@ UInt16 ROLANDADDRESS[TOTAL_TABS] =
 //
 
 // ALL THE NOTES ARE FIXED AT CHANNEL '0' (1), SysEx is in reverse-order!
+
+// Twinkle twinkle little star...
 unsigned long SEQ1[] =
 {
     0, 0, ((unsigned long)MEVT_LONGMSG<<24) | 8, 0x047F7FF0, 0xF77F7F01,
     0, 0, ((unsigned long)MEVT_TEMPO<<24) | 0x0007A120,
 
-    0, 0, 0x000079B0, // all controllers off
-    0, 0, 0x00007BB0, // all notes off
+    0, 0, 0x000079B0, // all controllers off (data byte 1, 79 hex)
+    0, 0, 0x00007BB0, // all notes off (data byte 1, 7B hex)
 
-    0, 0, 0x007F3C90,
-    48, 0, 0x00003C90,
-    0, 0, 0x007F3C90,
+    0, 0, 0x007F3C90, // data byte 1, hex 3C (4th ovtave C), data byte 2 is velocity 7F (note on)
+    48, 0, 0x00003C90, // (note off - velocity is 00)
+    0, 0, 0x007F3C90, // twice...
     48, 0, 0x00003C90,
 
-    0, 0, 0x007F4390,
+    0, 0, 0x007F4390,  // 4th octave G
     48, 0, 0x00004390,
     0, 0, 0x007F4390,
     48, 0, 0x00004390,
 
-    0, 0, 0x007F4590,
+    0, 0, 0x007F4590, // 4th octave A
     48, 0, 0x00004590,
     0, 0, 0x007F4590,
     48, 0, 0x00004590,
 
-    0, 0, 0x007F4390,
+    0, 0, 0x007F4390, // back to G for longer time
     86, 0, 0x00004390,
 
-    10, 0, 0x007F4190,
+    10, 0, 0x007F4190, // 41 hex is a 4th ovtive F
     48, 0, 0x00004190,
     0, 0, 0x007F4190,
     48, 0, 0x00004190,
 
-    0, 0, 0x007F4090,
+    0, 0, 0x007F4090, // E
     48, 0, 0x00004090,
     0, 0, 0x007F4090,
     48, 0, 0x00004090,
 
-    0, 0, 0x007F3E90,
+    0, 0, 0x007F3E90, // D
     48, 0, 0x00003E90,
     0, 0, 0x007F3E90,
     48, 0, 0x00003E90,
 
-    0, 0, 0x007F3C90,
+    0, 0, 0x007F3C90, // C
     150, 0, 0x00003C90
 //    350, 0, 0x00003C90
 };

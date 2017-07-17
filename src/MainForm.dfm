@@ -3,7 +3,7 @@ object FormMain: TFormMain
   Top = 0
   ActiveControl = Memo1
   Caption = 'Roland D-50'
-  ClientHeight = 282
+  ClientHeight = 215
   ClientWidth = 612
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -61,10 +61,10 @@ object FormMain: TFormMain
     Left = 0
     Top = 0
     Width = 137
-    Height = 282
+    Height = 215
     Align = alLeft
     TabOrder = 0
-    ExplicitHeight = 251
+    ExplicitHeight = 204
     object FilterComboBox1: TFilterComboBox
       Left = 1
       Top = 1
@@ -81,7 +81,7 @@ object FormMain: TFormMain
       Left = 1
       Top = 22
       Width = 135
-      Height = 238
+      Height = 171
       Align = alClient
       FileEdit = Edit1
       ItemHeight = 13
@@ -89,39 +89,39 @@ object FormMain: TFormMain
       PopupMenu = PopupMenuFileListBox
       TabOrder = 1
       OnDblClick = FileListBox1DblClick
-      ExplicitHeight = 207
+      ExplicitHeight = 160
     end
     object Edit1: TEdit
       Left = 1
-      Top = 260
+      Top = 193
       Width = 135
       Height = 21
       Align = alBottom
       TabOrder = 2
       Text = '*.d50'
       OnKeyDown = Edit1KeyDown
-      ExplicitTop = 229
+      ExplicitTop = 182
     end
   end
   object Panel1: TPanel
     Left = 137
     Top = 0
     Width = 475
-    Height = 282
+    Height = 215
     Align = alClient
     TabOrder = 1
-    ExplicitHeight = 251
+    ExplicitHeight = 204
     object Memo1: TMemo
       Left = 5
       Top = 63
       Width = 472
-      Height = 218
+      Height = 151
       Align = alCustom
       Anchors = [akLeft, akTop, akRight, akBottom]
       ReadOnly = True
       ScrollBars = ssVertical
       TabOrder = 0
-      ExplicitHeight = 187
+      ExplicitHeight = 140
     end
     object Panel3: TPanel
       Left = 6
@@ -214,43 +214,48 @@ object FormMain: TFormMain
   end
   object OpenDialog1: TOpenDialog
     Left = 504
-    Top = 208
+    Top = 160
   end
   object SaveDialog1: TSaveDialog
-    Left = 440
-    Top = 208
+    Left = 424
+    Top = 160
   end
   object MainMenu1: TMainMenu
-    Left = 344
-    Top = 208
+    Left = 400
+    Top = 72
     object S9001: TMenuItem
       Caption = 'Menu'
       ShortCut = 16496
-      object MenuLoadPatchFromD50: TMenuItem
-        Caption = '&Load patch from Roland D-50'
-        ShortCut = 114
-        OnClick = MenuSetBasePatchClick
+      object MenuItemSetWorkingDirectoryPath: TMenuItem
+        Caption = 'Set &patch files location'
+        ShortCut = 16497
+        OnClick = MenuItemSetWorkingDirectoryPathClick
       end
       object N3: TMenuItem
         Caption = '-'
       end
+      object MenuLoadPatchFromD50: TMenuItem
+        Caption = '&Load patch from Roland D-50'
+        ShortCut = 16498
+        OnClick = MenuSetBasePatchClick
+      end
       object MenuOpenFile: TMenuItem
         Caption = '&Open selected patch file'
-        ShortCut = 16497
+        ShortCut = 16499
         OnClick = MenuOpenFileClick
-      end
-      object MenuItemSetWorkingDirectoryPath: TMenuItem
-        Caption = 'Set patch files storage &path'
-        ShortCut = 16498
-        OnClick = MenuItemSetWorkingDirectoryPathClick
       end
       object N1: TMenuItem
         Caption = '-'
       end
       object MenuGetTempArea: TMenuItem
         Caption = '&Read temp area from D-50'
-        ShortCut = 16499
+        ShortCut = 16500
         OnClick = MenuGetTempAreaClick
+      end
+      object MenuCloseAllPatchForms: TMenuItem
+        Caption = '&Close all patch windows'
+        ShortCut = 16501
+        OnClick = MenuCloseAllPatchFormsClick
       end
       object N2: TMenuItem
         Caption = '-'
@@ -280,12 +285,12 @@ object FormMain: TFormMain
     end
   end
   object Timer1: TTimer
-    Left = 184
-    Top = 208
+    Left = 160
+    Top = 160
   end
   object PopupMenuFileListBox: TPopupMenu
     Left = 48
-    Top = 192
+    Top = 40
     object PopupMenuItemOpen: TMenuItem
       Caption = '&Open'
       OnClick = PopupMenuItemOpenClick
@@ -299,7 +304,7 @@ object FormMain: TFormMain
     Enabled = False
     Interval = 500
     OnTimer = PatchFormActivatedTimeout
-    Left = 313
-    Top = 112
+    Left = 289
+    Top = 160
   end
 end

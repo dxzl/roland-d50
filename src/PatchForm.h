@@ -113,10 +113,6 @@ Converts a string of UTF-8 characters to a Unicode string.
 #define NOTETIME_TO_OFF         4000
 #define NOTETIME_TO_ON          4000
 
-#define MIN_TIMER 3000
-#define MAX_TIMER 12000
-#define INC_TIMER 1000
-
 // There is a universal SysEx Master-Volume message!!!!!!!!!
 //
 
@@ -207,6 +203,7 @@ __published:    // IDE-managed Components
   TPanel *Panel1;
   TLabel *LabelRand;
   TButton *ButtonRandInterval;
+  TMenuItem *MenuItemFormPatchSetRandInterval;
     void __fastcall FormCreate(TObject *Sender);
     void __fastcall SGDblClick(TObject *Sender);
     void __fastcall MenuItemFormPatchWriteFileClick(TObject *Sender);
@@ -233,7 +230,10 @@ __published:    // IDE-managed Components
   void __fastcall ManuPopupCopyValsClick(TObject *Sender);
   void __fastcall MenuItemFormRenamePatchClick(TObject *Sender);
   void __fastcall FormActivate(TObject *Sender);
+  void __fastcall MenuItemFormPatchSetRandIntervalClick(TObject *Sender);
+  void __fastcall LabelRandClick(TObject *Sender);
 private:    // User declarations
+    String __fastcall GetRandString(int t);
     bool __fastcall ValsToClipboard(int tabIndex);
     bool __fastcall ClipboardToVals(int tabIndex);
     void __fastcall RetargetPatch(void);

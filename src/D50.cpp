@@ -9,8 +9,9 @@
 USEFORM("PatchForm.cpp", FormPatch);
 USEFORM("SelectPatchForm.cpp", FormSelectPatch);
 USEFORM("SetRandForm.cpp", FormSetRand);
-USEFORM("MainForm.cpp", FormMain);
 USEFORM("RenameForm.cpp", FormRename);
+USEFORM("MainForm.cpp", FormMain);
+USEFORM("SetRandIntervalForm.cpp", FormSetRandInterval);
 //---------------------------------------------------------------------------
 int WINAPI _tWinMain(HINSTANCE, HINSTANCE, LPTSTR, int)
 {
@@ -18,8 +19,8 @@ int WINAPI _tWinMain(HINSTANCE, HINSTANCE, LPTSTR, int)
 	{
 		Application->Initialize();
 		Application->MainFormOnTaskBar = true;
-		TStyleManager::TrySetStyle("Obsidian");
-		Application->CreateForm(__classid(TFormMain), &FormMain);
+		TStyleManager::TrySetStyle("Aqua Graphite");
+     Application->CreateForm(__classid(TFormMain), &FormMain);
      Application->Run();
 	}
 	catch (Exception &exception)

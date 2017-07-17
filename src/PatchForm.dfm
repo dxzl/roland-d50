@@ -2,7 +2,7 @@ object FormPatch: TFormPatch
   Left = 0
   Top = 0
   Caption = 'Roland D-50 Temporary Area'
-  ClientHeight = 317
+  ClientHeight = 244
   ClientWidth = 601
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -63,23 +63,20 @@ object FormPatch: TFormPatch
     Left = 0
     Top = 0
     Width = 601
-    Height = 293
+    Height = 220
     ActivePage = UpperPartial1
     Align = alClient
     PopupMenu = PopupMenu1
     TabOrder = 0
-    ExplicitTop = 2
+    ExplicitHeight = 193
     object UpperPartial1: TTabSheet
       Caption = 'Upper Partial 1'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 731
-      ExplicitHeight = 237
+      ExplicitHeight = 165
       object UpperPartial1SG: TStringGrid
         Left = 0
         Top = 0
         Width = 593
-        Height = 265
+        Height = 192
         Align = alClient
         ColCount = 4
         DefaultColWidth = 135
@@ -88,8 +85,7 @@ object FormPatch: TFormPatch
         ScrollBars = ssVertical
         TabOrder = 0
         OnDblClick = SGDblClick
-        ExplicitWidth = 200
-        ExplicitHeight = 241
+        ExplicitHeight = 165
         ColWidths = (
           135
           135
@@ -168,13 +164,13 @@ object FormPatch: TFormPatch
       ImageIndex = 1
       ExplicitLeft = 0
       ExplicitTop = 0
-      ExplicitWidth = 731
+      ExplicitWidth = 0
       ExplicitHeight = 0
       object UpperPartial2SG: TStringGrid
         Left = 0
         Top = 0
         Width = 593
-        Height = 265
+        Height = 205
         Align = alClient
         ColCount = 4
         DefaultColWidth = 135
@@ -183,8 +179,6 @@ object FormPatch: TFormPatch
         ScrollBars = ssVertical
         TabOrder = 0
         OnDblClick = SGDblClick
-        ExplicitWidth = 729
-        ExplicitHeight = 209
         ColWidths = (
           135
           135
@@ -263,13 +257,13 @@ object FormPatch: TFormPatch
       ImageIndex = 2
       ExplicitLeft = 0
       ExplicitTop = 0
-      ExplicitWidth = 731
+      ExplicitWidth = 0
       ExplicitHeight = 0
       object UpperCommonSG: TStringGrid
         Left = 0
         Top = 0
         Width = 593
-        Height = 265
+        Height = 205
         Align = alClient
         ColCount = 4
         DefaultColWidth = 135
@@ -278,7 +272,6 @@ object FormPatch: TFormPatch
         ScrollBars = ssVertical
         TabOrder = 0
         OnDblClick = SGDblClick
-        ExplicitWidth = 731
         ColWidths = (
           135
           135
@@ -357,13 +350,13 @@ object FormPatch: TFormPatch
       ImageIndex = 3
       ExplicitLeft = 0
       ExplicitTop = 0
-      ExplicitWidth = 731
+      ExplicitWidth = 0
       ExplicitHeight = 0
       object LowerPartial1SG: TStringGrid
         Left = 0
         Top = 0
         Width = 593
-        Height = 265
+        Height = 205
         Align = alClient
         ColCount = 4
         DefaultColWidth = 135
@@ -372,7 +365,6 @@ object FormPatch: TFormPatch
         ScrollBars = ssVertical
         TabOrder = 0
         OnDblClick = SGDblClick
-        ExplicitWidth = 731
         ColWidths = (
           135
           135
@@ -451,13 +443,13 @@ object FormPatch: TFormPatch
       ImageIndex = 4
       ExplicitLeft = 0
       ExplicitTop = 0
-      ExplicitWidth = 731
+      ExplicitWidth = 0
       ExplicitHeight = 0
       object LowerPartial2SG: TStringGrid
         Left = 0
         Top = 0
         Width = 593
-        Height = 265
+        Height = 205
         Align = alClient
         ColCount = 4
         DefaultColWidth = 135
@@ -466,7 +458,6 @@ object FormPatch: TFormPatch
         ScrollBars = ssVertical
         TabOrder = 0
         OnDblClick = SGDblClick
-        ExplicitWidth = 731
         ColWidths = (
           135
           135
@@ -545,13 +536,13 @@ object FormPatch: TFormPatch
       ImageIndex = 5
       ExplicitLeft = 0
       ExplicitTop = 0
-      ExplicitWidth = 731
+      ExplicitWidth = 0
       ExplicitHeight = 0
       object LowerCommonSG: TStringGrid
         Left = 0
         Top = 0
         Width = 593
-        Height = 265
+        Height = 205
         Align = alClient
         ColCount = 4
         DefaultColWidth = 135
@@ -560,7 +551,6 @@ object FormPatch: TFormPatch
         ScrollBars = ssVertical
         TabOrder = 0
         OnDblClick = SGDblClick
-        ExplicitWidth = 731
         ColWidths = (
           135
           135
@@ -639,13 +629,13 @@ object FormPatch: TFormPatch
       ImageIndex = 6
       ExplicitLeft = 0
       ExplicitTop = 0
-      ExplicitWidth = 731
+      ExplicitWidth = 0
       ExplicitHeight = 0
       object PatchSG: TStringGrid
         Left = 0
         Top = 0
         Width = 593
-        Height = 265
+        Height = 205
         Align = alClient
         ColCount = 4
         DefaultColWidth = 135
@@ -654,7 +644,6 @@ object FormPatch: TFormPatch
         ScrollBars = ssVertical
         TabOrder = 0
         OnDblClick = SGDblClick
-        ExplicitWidth = 731
         ColWidths = (
           135
           135
@@ -731,19 +720,19 @@ object FormPatch: TFormPatch
   end
   object Panel1: TPanel
     Left = 0
-    Top = 293
+    Top = 220
     Width = 601
     Height = 24
     Align = alBottom
     TabOrder = 1
-    ExplicitTop = 235
-    ExplicitWidth = 729
+    ExplicitTop = 193
     object LabelRand: TLabel
       Left = 24
       Top = 6
       Width = 93
       Height = 13
       Caption = 'Randomization: Off'
+      OnClick = LabelRandClick
     end
     object ButtonRandInterval: TButton
       Left = 8
@@ -763,13 +752,18 @@ object FormPatch: TFormPatch
     object MenuFormPatchMenu: TMenuItem
       Caption = '&Menu'
       ShortCut = 119
+      object MenuItemFormPatchAllNotesOff: TMenuItem
+        Caption = '&All notes off'
+        ShortCut = 113
+        OnClick = MenuItemFormPatchAllNotesOffClick
+      end
       object MenuItemFormPatchRename: TMenuItem
-        Caption = 'Rename patch'
+        Caption = 'Re&name patch'
         ShortCut = 114
         OnClick = MenuItemFormRenamePatchClick
       end
       object MenuItemFormPatchChange: TMenuItem
-        Caption = 'Change patch number'
+        Caption = '&Change patch number'
         ShortCut = 115
         OnClick = MenuItemFormPatchChangeClick
       end
@@ -782,9 +776,13 @@ object FormPatch: TFormPatch
         OnClick = MenuItemFormPatchStartStopRandomClick
       end
       object MenuItemFormPatchManualRandomize: TMenuItem
-        Caption = 'Manual &randomize (one-shot)'
+        Caption = '&Manual randomize (one-shot)'
         ShortCut = 117
         OnClick = MenuItemFormPatchManualRandomizeClick
+      end
+      object MenuItemFormPatchSetRandInterval: TMenuItem
+        Caption = 'Set Randomization &Interval'
+        OnClick = MenuItemFormPatchSetRandIntervalClick
       end
       object N2: TMenuItem
         Caption = '-'
@@ -795,16 +793,11 @@ object FormPatch: TFormPatch
         OnClick = MenuItemFormPatchWriteFileClick
       end
       object Exportpatchtosyxbinaryfile1: TMenuItem
-        Caption = 'Export as .syx binary patch file'
+        Caption = '&Export as .syx binary patch file'
         OnClick = MenuItemFormPatchWriteSYXFileClick
       end
       object N3: TMenuItem
         Caption = '-'
-      end
-      object MenuItemFormPatchAllNotesOff: TMenuItem
-        Caption = 'All notes off'
-        ShortCut = 119
-        OnClick = MenuItemFormPatchAllNotesOffClick
       end
       object MenuItemFormPatchPlay: TMenuItem
         Caption = '&Play patch'
@@ -815,12 +808,12 @@ object FormPatch: TFormPatch
         Caption = '-'
       end
       object MenuItemFormPatchRead: TMenuItem
-        Caption = 'Read D-50 temp area'
+        Caption = '&Read D-50 temp area'
         ShortCut = 121
         OnClick = MenuItemFormPatchReadTempClick
       end
       object MenuItemFormPatchWrite: TMenuItem
-        Caption = 'Write D-50 temp area'
+        Caption = '&Write D-50 temp area'
         ShortCut = 122
         OnClick = MenuItemFormPatchWriteTempClick
       end
@@ -828,7 +821,7 @@ object FormPatch: TFormPatch
         Caption = '-'
       end
       object MenuItemFormPatchEnforceMinMaxValue: TMenuItem
-        Caption = 'Limit to min/max values'
+        Caption = '&Limit to min/max values'
         ShortCut = 123
         OnClick = MenuItemFormPatchLimitToMinMaxValueClick
       end

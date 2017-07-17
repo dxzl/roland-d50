@@ -24,7 +24,7 @@
 // defines
 //---------------------------------------------------------------------------
 // Note: Use String() to wrap this for the overloaded RegHelper write method!
-#define VERSION_STR "Version 1.48: July 9, 2017"
+#define VERSION_STR "Version 1.49: July 12, 2017"
 //---------------------------------------------------------------------------
 
 #define REGISTRY_KEY "\\Software\\Discrete-Time Systems\\RolandD50"
@@ -54,7 +54,8 @@
 #define TXSHORTTIMEOUT 1100 // 1.1 seconds
 #define TXMIDITIMEOUT 5100 // 5.1 seconds (send entire multi-byte sysex message or packet)
 
-#define DEF_RAND_INTERVAL 5000
+#define MIN_RAND_INTERVAL 3000
+#define DEF_RAND_INTERVAL 7000
 #define DEF_PATCH 0 // "Fantasia"
 
 
@@ -176,13 +177,14 @@ __published:  // IDE-managed Components
     TMenuItem *MenuOpenFile;
     TMenuItem *N1;
   TMenuItem *Save64IntPatches;
-    TMenuItem *N2;
     TMenuItem *MenuItemSetWorkingDirectoryPath;
   TMenuItem *Help1;
   TMenuItem *MenuLoadPatchFromD50;
   TMenuItem *Save64CrdPatches;
   TMenuItem *N3;
   TTimer *PatchFormActivatedTimer;
+  TMenuItem *MenuCloseAllPatchForms;
+  TMenuItem *N2;
 
     void __fastcall MenuGetTempAreaClick(TObject *Sender);
     void __fastcall MenuAboutClick(TObject *Sender);
@@ -207,6 +209,7 @@ __published:  // IDE-managed Components
   void __fastcall Edit1KeyDown(TObject *Sender, WORD &Key, TShiftState Shift);
   void __fastcall Save64CrdPatchesClick(TObject *Sender);
   void __fastcall PatchFormActivatedTimeout(TObject *Sender);
+  void __fastcall MenuCloseAllPatchFormsClick(TObject *Sender);
 
 private:  // User declarations
     void __fastcall FormPatchActivated(TFormPatch *f);

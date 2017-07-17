@@ -6,6 +6,7 @@
 
 #include "PatchForm.h"
 #include "SetRandForm.h"
+#include "SetRandIntervalForm.h"
 #include "SelectPatchForm.h"
 #include "RenameForm.h"
 //---------------------------------------------------------------------------
@@ -35,7 +36,7 @@ void __fastcall TFormPatch::FormCreate(TObject *Sender)
     m_currentTimer = FormMain->RandInterval;
 
     // limit-check this!
-    if (m_currentTimer < MIN_TIMER || m_currentTimer > MAX_TIMER)
+    if (m_currentTimer < MIN_RAND_INTERVAL)
       m_currentTimer = DEF_RAND_INTERVAL;
 
     LabelRand->Caption = "Randomization: Off";
@@ -489,7 +490,7 @@ void __fastcall TFormPatch::SetRandomization(bool flag)
           TimerSendPatch->Interval = m_currentTimer;
 
         MenuItemFormPatchStartStopRandom->Checked = true;
-        LabelRand->Caption = "Randomization: " + FormatFloat("0.0",(float)m_currentTimer/1000.);
+        LabelRand->Caption = GetRandString(m_currentTimer);
 
         TimerSendPatchTimer(NULL); // start randomizing immediately
 
@@ -1526,15 +1527,15 @@ void __fastcall TFormPatch::MenuHelpClick(TObject *Sender)
 "Each sound-parameter for the D-50 has a corresponding \"Random Flag\". Only parameters with the flag set to On are allowed to change to new randomly generated values when you press F6.\n\n"
 "The idea is to set a patch on the D-50 you want to start from, then set the parameters you want to allow to randomly vary. Then you press F6 while listening to new sounds until you hear something you want to keep. Press F7 to keep the sound as a patch (it appears in the left panel of the main program).\n\n"
 "Double-click an item in the \"Random Mode\" column to toggle randomization On/Off for that particular parameter.\n\n"
-"F3 - Rename patch (changes the letters in cells 1-18 of the Patch tab)."
-"F4 - Change patch number. This reassigns the patch to a new bank and patch number on your D-50."
+"F2 - All notes off (Restore base patch).\n"
+"F3 - Rename patch (changes the letters in cells 1-18 of the Patch tab).\n"
+"F4 - Change patch number. This reassigns the patch to a new bank and patch number on your D-50.\n"
 "F5 - Start/Stop timer-driven periotic random new-sound generation (click on the small button in the lower left corner to cycle through allowed times).\n"
 "F6 - Manually generates a new random sound each time you press F6.\n"
 "F7 - Write the currently playing new sound to a new patch file in Documents\\RolandD50. The name of the file is auto-generated and contains all information from the patch-grid. The files appear in the main program in the left panel. Right-click a file to send it to the D-50 temp-area or delete it. Renamed the file by typong a new name at the bottom and pressing Enter.\n"
-"F8 - All notes off (Restore base patch).\n"
 "F9 - Play a test-sequence of midi nots so you can hear the current sound.\n"
-"F10 - Transmit snapshot of the current patch (with your edits) to the D-50.\n"
-"F11 - Read the D50 temp-area into this patch-grid.\n";
+"F10 - Read the D50 temp-area into this patch-grid.\n";
+"F11 - Transmit snapshot of the current patch (with your edits) to the D-50.\n"
 "F12 - Limit to min/max values auto-fixes out-of-range numbers in all Value columns.\n";
 
   ShowMessage(sHelp);
@@ -1542,26 +1543,7 @@ void __fastcall TFormPatch::MenuHelpClick(TObject *Sender)
 //---------------------------------------------------------------------------
 void __fastcall TFormPatch::ButtonRandIntervalClick(TObject *Sender)
 {
-  if (!m_randomizationOn)
-    SetRandomization(true);
-  else // running...
-  {
-    m_currentTimer += INC_TIMER;
-    if (m_currentTimer > MAX_TIMER)
-    {
-      // turn off
-      SetRandomization(false);
-      m_currentTimer = MIN_TIMER - INC_TIMER;
-      TimerSendPatch->Interval = m_currentTimer;
-    }
-    else
-    {
-      TimerSendPatch->Enabled = false;
-      TimerSendPatch->Interval = m_currentTimer;
-      LabelRand->Caption = "Randomization: " + FormatFloat("0.0",(float)m_currentTimer/1000.);
-      TimerSendPatch->Enabled = true;
-    }
-  }
+  SetRandomization(!m_randomizationOn);
 }
 //---------------------------------------------------------------------------
 void __fastcall TFormPatch::MenuItemFormRenamePatchClick(TObject *Sender)
@@ -1642,6 +1624,53 @@ void __fastcall TFormPatch::ManuPopupCopyValsClick(TObject *Sender)
     int page = PageControl->ActivePageIndex;
     if (page >=0 && page <= TOTAL_TABS)
         ValsToClipboard(page);
+}
+//---------------------------------------------------------------------------
+void __fastcall TFormPatch::LabelRandClick(TObject *Sender)
+{
+    MenuItemFormPatchSetRandIntervalClick(NULL);
+}
+//---------------------------------------------------------------------------
+void __fastcall TFormPatch::MenuItemFormPatchSetRandIntervalClick(TObject *Sender)
+
+{
+    TFormSetRandInterval* f = NULL;
+
+    try
+    {
+        f = new TFormSetRandInterval(this);
+        if (f)
+        {
+            f->RandInterval = FormMain->RandInterval;
+            TModalResult r = f->ShowModal();
+            if (r == mrOk && m_currentTimer != f->RandInterval)
+            {
+                m_currentTimer = f->RandInterval;
+                if (m_currentTimer < MIN_RAND_INTERVAL)
+                    m_currentTimer = MIN_RAND_INTERVAL;
+                if (m_randomizationOn)
+                    TimerSendPatch->Enabled = false;
+                TimerSendPatch->Interval = m_currentTimer;
+                if (m_randomizationOn)
+                {
+                    TimerSendPatch->Enabled = true;
+                    LabelRand->Caption = GetRandString(m_currentTimer);
+                }
+                FormMain->RandInterval = m_currentTimer;
+            }
+        }
+    }
+    __finally
+    {
+        if (f)
+          delete f;
+    }
+}
+//---------------------------------------------------------------------------
+String __fastcall TFormPatch::GetRandString(int t)
+
+{
+    return "Randomization: " + FormatFloat("0.00",(float)t/1000.) + " seconds";
 }
 //---------------------------------------------------------------------------
 

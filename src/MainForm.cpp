@@ -135,7 +135,7 @@ void __fastcall TFormMain::FormCreate(TObject *Sender)
                         "To delete settings, go to Start => Run and type \"cmd\"\r\n"
                         "In the window type the line below and press enter:\r\n\r\n"
                         "reg delete \"HKCU\\Software\\Discrete-Time Systems\\RolandD50\" /f\r\n"
-                        "(or: Start => Run, \"regedit\" and search for \"RolandD50\")\r\n");
+                        "(or: Start => Run, \"regedit\" and search for \"RolandD50\")");
                 }
 
                 pReg->ReadSetting(S9_REGKEY_MIDI_CHAN, g_midiChan, 0);
@@ -214,8 +214,8 @@ void __fastcall TFormMain::FormCreate(TObject *Sender)
     SetWorkingDir(g_docPath);
 
     printm(VERSION_STR);
-    printm("Click \"Menu\" and select \"Help\"...\r\n\r\n");
-    printm("(Note: This program writes to your D-50's temp-area only and will never overwrite your saved patches!)\n");
+    printm("Click \"Menu\" and select \"Help\"...\r\n");
+    printm("(Note: This program writes to your D-50's temp-area only and will never overwrite your saved patches!)");
 
     // Create midi In/Out objects and populate device combo-boxes
     MidiDeviceListRefresh();
@@ -408,7 +408,12 @@ void __fastcall TFormMain::MenuItemSetWorkingDirectoryPathClick(TObject *Sender)
     String sDir = g_docPath;
     if (SelectDirectory(sDir,
      (TSelectDirOpts() << sdAllowCreate << sdPerformCreate << sdPrompt), 0))
-        SetWorkingDir(sDir);
+     {
+        if (sDir == g_docPath)
+            ShowMessage("Directory unchanged... make sure you DOUBLE-CLICK on the folder you want!");
+        else
+            SetWorkingDir(sDir);
+     }
 }
 //---------------------------------------------------------------------------
 void __fastcall TFormMain::TimerGpTimeout(TObject *Sender)
@@ -438,7 +443,7 @@ void __fastcall TFormMain::TimerDemoTimeout(TObject *Sender)
     if (!IsD50Connected())
         printm("\r\nDid not detect your D-50 - is it on and hooked-up?"
                      "\r\nAre the midi devices and channel correct?"
-                     "\r\n(Click \"Menu->Read temp area\" to retry!)\r\n");
+                     "\r\n(Click \"Menu->Read temp area\" to retry!)");
     else
     {
         MenuSetBasePatchClick(NULL);
@@ -2036,7 +2041,7 @@ void __fastcall TFormMain::Help1Click(TObject *Sender)
 "8. In the menu for the patch's window (not the main window) click \"Menu->Randomization\" to start/stop new sound creation. A new patch will be generated every 5-10 seconds and a test-note sequence will be played. When you hear something interesting, you can save the new patch to a file in your RolandD50 folder by pressing F7.\n\n"
 "The left panel shows a list of patches that you have generated. Patch file-names are generated automatically.\n"
 "To delete a patch, click it and press the Del key, or right-click and choose Delete in the pop-up menu.\n"
-"To rename a patch, click it and change the name in the lower box then press Enter.\n"
+"To rename a patch file, click it and change the name in the lower box then press Enter.\n"
 "To send a patch to your D-50, double-click it or right-click and choose Play from the pop-up menu.\n"
 "NOTE: This program writes to your D-50's temp-area only and will never overwrite your saved patches!\n";
 
@@ -2069,9 +2074,9 @@ void __fastcall TFormMain::PatchFormActivatedTimeout(TObject *Sender)
           }
           else // form is active, save pointer
             fActive = f;
-        }  
+        }
     }
-    
+
     // now change patch to the active form
     if (fActive)
         FormPatchActivated(fActive);
@@ -2092,6 +2097,11 @@ void __fastcall TFormMain::FormPatchActivated(TFormPatch *f)
         f->TimerSendPatch->Interval = f->CurrentTimer;
         f->TimerSendPatch->Enabled = true;
     }
+}
+//---------------------------------------------------------------------------
+void __fastcall TFormMain::MenuCloseAllPatchFormsClick(TObject *Sender)
+{
+    RemoveAllPatchForms();
 }
 //---------------------------------------------------------------------------
 
