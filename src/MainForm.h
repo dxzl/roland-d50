@@ -24,7 +24,7 @@
 // defines
 //---------------------------------------------------------------------------
 // Note: Use String() to wrap this for the overloaded RegHelper write method!
-#define VERSION_STR "Version 1.50: July 23, 2017"
+#define VERSION_STR "Version 1.51: July 23, 2017"
 //---------------------------------------------------------------------------
 
 #define REGISTRY_KEY "\\Software\\Discrete-Time Systems\\RolandD50"
@@ -254,6 +254,7 @@ private:  // User declarations
     TMIDI_Device_Input *g_midiIn;
     TMIDI_Device_Output *g_midiOut;
     TList* g_patchForms;
+    TFormPatch* g_fActive;
 
     String g_DragDropFilePath, g_docPath;
 

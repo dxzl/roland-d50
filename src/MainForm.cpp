@@ -112,6 +112,7 @@ void __fastcall TFormMain::FormCreate(TObject *Sender)
     g_abort = false;
     g_systemBusy = false;
     g_currentPatch = -1;
+    g_fActive = NULL;
 
     // read settings from registry HKEY_CURRENT_USER
     // \\Software\\Discrete-Time Systems\\AkaiS950
@@ -284,6 +285,13 @@ void __fastcall TFormMain::FormKeyDown(TObject *Sender, WORD &Key, TShiftState S
         g_abort = true;
     else if (Key == VK_DELETE && FileListBox1->Focused())
         DeleteSelectedFile();
+    else if (Key == VK_F7)
+    {
+        // Allow the F7 key to save the most recently activated patch
+        // if randomization is on
+        if (g_fActive && g_fActive->RandomizationOn)
+            g_fActive->WritePatchToFile(false);
+    }
 }
 //---------------------------------------------------------------------------
 void __fastcall TFormMain::Save64IntPatchesClick(TObject *Sender)
@@ -2055,8 +2063,8 @@ void __fastcall TFormMain::PatchFormActivatedTimeout(TObject *Sender)
     // find the active FormPatch...
     int count = g_patchForms->Count;
     
-    TFormPatch* fActive = NULL;
-    
+    g_fActive = NULL;
+
     // turn off timers on inactive forms and save a pointer to the
     // active form
     for (int ii = 0; ii < count; ii++)
@@ -2073,13 +2081,13 @@ void __fastcall TFormMain::PatchFormActivatedTimeout(TObject *Sender)
 
           }
           else // form is active, save pointer
-            fActive = f;
+            g_fActive = f;
         }
     }
 
     // now change patch to the active form
-    if (fActive)
-        FormPatchActivated(fActive);
+    if (g_fActive)
+        FormPatchActivated(g_fActive);
 }
 //---------------------------------------------------------------------------
 void __fastcall TFormMain::FormPatchActivated(TFormPatch *f)

@@ -2,7 +2,7 @@ object FormPatch: TFormPatch
   Left = 0
   Top = 0
   Caption = 'Roland D-50 Temporary Area'
-  ClientHeight = 244
+  ClientHeight = 240
   ClientWidth = 601
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -63,20 +63,20 @@ object FormPatch: TFormPatch
     Left = 0
     Top = 0
     Width = 601
-    Height = 220
+    Height = 216
     ActivePage = UpperPartial1
     Align = alClient
     PopupMenu = PopupMenu1
     TabOrder = 0
-    ExplicitHeight = 193
+    ExplicitHeight = 200
     object UpperPartial1: TTabSheet
       Caption = 'Upper Partial 1'
-      ExplicitHeight = 165
+      ExplicitHeight = 172
       object UpperPartial1SG: TStringGrid
         Left = 0
         Top = 0
         Width = 593
-        Height = 192
+        Height = 188
         Align = alClient
         ColCount = 4
         DefaultColWidth = 135
@@ -85,7 +85,7 @@ object FormPatch: TFormPatch
         ScrollBars = ssVertical
         TabOrder = 0
         OnDblClick = SGDblClick
-        ExplicitHeight = 165
+        ExplicitHeight = 172
         ColWidths = (
           135
           135
@@ -720,12 +720,12 @@ object FormPatch: TFormPatch
   end
   object Panel1: TPanel
     Left = 0
-    Top = 220
+    Top = 216
     Width = 601
     Height = 24
     Align = alBottom
     TabOrder = 1
-    ExplicitTop = 193
+    ExplicitTop = 200
     object LabelRand: TLabel
       Left = 24
       Top = 6
