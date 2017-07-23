@@ -3,7 +3,7 @@ object FormMain: TFormMain
   Top = 0
   ActiveControl = Memo1
   Caption = 'Roland D-50'
-  ClientHeight = 215
+  ClientHeight = 224
   ClientWidth = 612
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -61,10 +61,10 @@ object FormMain: TFormMain
     Left = 0
     Top = 0
     Width = 137
-    Height = 215
+    Height = 224
     Align = alLeft
     TabOrder = 0
-    ExplicitHeight = 204
+    ExplicitHeight = 195
     object FilterComboBox1: TFilterComboBox
       Left = 1
       Top = 1
@@ -81,7 +81,7 @@ object FormMain: TFormMain
       Left = 1
       Top = 22
       Width = 135
-      Height = 171
+      Height = 180
       Align = alClient
       FileEdit = Edit1
       ItemHeight = 13
@@ -89,39 +89,39 @@ object FormMain: TFormMain
       PopupMenu = PopupMenuFileListBox
       TabOrder = 1
       OnDblClick = FileListBox1DblClick
-      ExplicitHeight = 160
+      ExplicitHeight = 151
     end
     object Edit1: TEdit
       Left = 1
-      Top = 193
+      Top = 202
       Width = 135
       Height = 21
       Align = alBottom
       TabOrder = 2
       Text = '*.d50'
       OnKeyDown = Edit1KeyDown
-      ExplicitTop = 182
+      ExplicitTop = 173
     end
   end
   object Panel1: TPanel
     Left = 137
     Top = 0
     Width = 475
-    Height = 215
+    Height = 224
     Align = alClient
     TabOrder = 1
-    ExplicitHeight = 204
+    ExplicitHeight = 195
     object Memo1: TMemo
       Left = 5
       Top = 63
       Width = 472
-      Height = 151
+      Height = 160
       Align = alCustom
       Anchors = [akLeft, akTop, akRight, akBottom]
       ReadOnly = True
       ScrollBars = ssVertical
       TabOrder = 0
-      ExplicitHeight = 140
+      ExplicitHeight = 131
     end
     object Panel3: TPanel
       Left = 6

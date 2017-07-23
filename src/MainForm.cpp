@@ -323,10 +323,10 @@ void __fastcall TFormMain::ReadPatchesAndSaveTo64Files(bool bCard)
 
             String fileDir = this->DocPath;
 
-            int pos = fileDir.LowerCase().Pos("\\patchsave\\");
+            int pos = fileDir.LowerCase().Pos("\\patchsave");
 
             if (pos <= 0)
-                fileDir += "\\PatchSave\\";
+                fileDir = ExcludeTrailingBackslash(fileDir) + "\\PatchSave";
 
             if (!DirectoryExists(fileDir))
                 CreateDir(fileDir);
@@ -373,7 +373,7 @@ void __fastcall TFormMain::ReadPatchesAndSaveTo64Files(bool bCard)
                 int ii = 0;
 
                 do {
-                    filePath = fileDir + sNew +
+                    filePath = fileDir + "\\" + sNew +
                         System::Sysutils::Format("%2.2d", ARRAYOFCONST((ii++))) + ".d50";
                 }
                 while (FileExists(filePath));

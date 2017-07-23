@@ -24,7 +24,7 @@
 // defines
 //---------------------------------------------------------------------------
 // Note: Use String() to wrap this for the overloaded RegHelper write method!
-#define VERSION_STR "Version 1.49: July 12, 2017"
+#define VERSION_STR "Version 1.50: July 23, 2017"
 //---------------------------------------------------------------------------
 
 #define REGISTRY_KEY "\\Software\\Discrete-Time Systems\\RolandD50"
