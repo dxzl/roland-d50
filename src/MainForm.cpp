@@ -812,7 +812,10 @@ void __fastcall TFormMain::DeleteSelectedFile(void)
                     idx--;
 
                 FileListBox1->ItemIndex = idx;
+                Edit1->Text = FileListBox1->Items->Strings[idx];
             }
+            else
+              Edit1->Text = "";
         }
     }
 }

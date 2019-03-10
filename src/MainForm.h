@@ -14,8 +14,8 @@
 #include <Vcl.ExtCtrls.hpp>
 #include <Vcl.Dialogs.hpp>
 #include <Vcl.Menus.hpp>
-#include "AdPort.hpp"
-#include "OoMisc.hpp"
+//#include "AdPort.hpp"
+//#include "OoMisc.hpp"
 #include ".\Midi\MSC_In_Device.hpp"
 #include ".\Midi\MSC_Out_Device.hpp"
 #include "DefaultStrings.h"
@@ -24,7 +24,7 @@
 // defines
 //---------------------------------------------------------------------------
 // Note: Use String() to wrap this for the overloaded RegHelper write method!
-#define VERSION_STR "Version 1.51: July 23, 2017"
+#define VERSION_STR "Version 1.52: March 10, 2019"
 //---------------------------------------------------------------------------
 
 #define REGISTRY_KEY "\\Software\\Discrete-Time Systems\\RolandD50"

@@ -1,0 +1,41 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>2017/06/28 11:30:36.000.576,=C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\Unit1.cpp</Transaction>
+    <Transaction>2017/06/28 11:48:30.000.440,C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\CHangePatchForm.dfm=C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\Unit1.dfm</Transaction>
+    <Transaction>2017/06/28 11:48:30.000.440,C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\CHangePatchForm.cpp=C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\Unit1.cpp</Transaction>
+    <Transaction>2017/06/28 11:48:30.000.440,C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\CHangePatchForm.h=C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\Unit1.h</Transaction>
+    <Transaction>2017/06/28 11:48:56.000.083,C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\CaangePatchForm.dfm=C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\CHangePatchForm.dfm</Transaction>
+    <Transaction>2017/06/28 11:48:56.000.083,C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\CaangePatchForm.h=C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\CHangePatchForm.h</Transaction>
+    <Transaction>2017/06/28 11:48:56.000.083,C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\CaangePatchForm.cpp=C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\CHangePatchForm.cpp</Transaction>
+    <Transaction>2017/06/28 11:49:03.000.042,C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\ChangePatchForm.cpp=C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\CaangePatchForm.cpp</Transaction>
+    <Transaction>2017/06/28 11:49:03.000.042,C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\ChangePatchForm.h=C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\CaangePatchForm.h</Transaction>
+    <Transaction>2017/06/28 11:49:03.000.042,C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\ChangePatchForm.dfm=C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\CaangePatchForm.dfm</Transaction>
+    <Transaction>2017/06/28 11:53:04.000.538,C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\PatchForm.h=C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\DataGridForm.h</Transaction>
+    <Transaction>2017/06/28 11:53:04.000.538,C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\PatchForm.cpp=C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\DataGridForm.cpp</Transaction>
+    <Transaction>2017/06/28 11:53:04.000.538,C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\PatchForm.dfm=C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\DataGridForm.dfm</Transaction>
+    <Transaction>2017/07/02 13:27:18.000.964,C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\ChangePatchForm.h=C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\SetBasePatchForm.h</Transaction>
+    <Transaction>2017/07/02 13:27:18.000.964,C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\ChangePatchForm.dfm=C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\SetBasePatchForm.dfm</Transaction>
+    <Transaction>2017/07/02 13:27:18.000.964,C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\ChangePatchForm.cpp=C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\SetBasePatchForm.cpp</Transaction>
+    <Transaction>2017/07/03 13:27:56.000.436,C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\SetBasePatchForm.h=C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\LoadPatchFromD50.h</Transaction>
+    <Transaction>2017/07/03 13:27:56.000.436,C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\SetBasePatchForm.dfm=C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\LoadPatchFromD50.dfm</Transaction>
+    <Transaction>2017/07/03 13:27:56.000.436,C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\SetBasePatchForm.cpp=C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\LoadPatchFromD50.cpp</Transaction>
+    <Transaction>2017/07/03 13:33:34.000.660,C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\LoadPatchFromD50.h=C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\SelectPatch.h</Transaction>
+    <Transaction>2017/07/03 13:33:34.000.660,C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\LoadPatchFromD50.cpp=C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\SelectPatch.cpp</Transaction>
+    <Transaction>2017/07/03 13:33:34.000.660,C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\LoadPatchFromD50.dfm=C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\SelectPatch.dfm</Transaction>
+    <Transaction>2017/07/04 16:17:51.000.866,C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\SelectPatch.cpp=C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\SelectPatchForm.cpp</Transaction>
+    <Transaction>2017/07/04 16:17:51.000.866,C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\SelectPatch.h=C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\SelectPatchForm.h</Transaction>
+    <Transaction>2017/07/04 16:17:51.000.867,C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\SelectPatch.dfm=C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\SelectPatchForm.dfm</Transaction>
+    <Transaction>2017/07/06 12:01:24.000.034,=C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\Unit1.cpp</Transaction>
+    <Transaction>2017/07/06 12:05:17.000.310,C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\Unit1.dfm=C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\RenamePatchForm.dfm</Transaction>
+    <Transaction>2017/07/06 12:05:17.000.310,C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\Unit1.h=C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\RenamePatchForm.h</Transaction>
+    <Transaction>2017/07/06 12:05:17.000.310,C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\Unit1.cpp=C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\RenamePatchForm.cpp</Transaction>
+    <Transaction>2017/07/06 12:07:57.000.211,C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\RenamePatchForm.h=C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\RenameForm.h</Transaction>
+    <Transaction>2017/07/06 12:07:57.000.211,C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\RenamePatchForm.dfm=C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\RenameForm.dfm</Transaction>
+    <Transaction>2017/07/06 12:07:57.000.211,C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\RenamePatchForm.cpp=C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\RenameForm.cpp</Transaction>
+    <Transaction>2017/07/11 17:29:51.000.104,=C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\Unit1.cpp</Transaction>
+    <Transaction>2017/07/11 17:35:52.000.295,C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\SetRandIntervalForm.h=C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\Unit1.h</Transaction>
+    <Transaction>2017/07/11 17:35:52.000.295,C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\SetRandIntervalForm.dfm=C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\Unit1.dfm</Transaction>
+    <Transaction>2017/07/11 17:35:52.000.295,C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\SetRandIntervalForm.cpp=C:\Users\Scott\Documents\Embarcadero\Studio\Projects\D50 (Midi)\Unit1.cpp</Transaction>
+  </Transactions>
+</BorlandProject>
